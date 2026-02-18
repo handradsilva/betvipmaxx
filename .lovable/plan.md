@@ -1,86 +1,70 @@
 
 
-## Plano Completo: Webhook BS Pay + Saque PIX
+## Plano: Confirmacao de Pagamento por Polling (sem webhook)
 
-Vou criar tudo de uma vez. Depois, voce so precisa cadastrar a URL do webhook no painel da BS Pay.
-
----
-
-### 1. Edge Function: Webhook BS Pay (`bspay-webhook`)
-
-Recebe notificacoes da BS Pay quando um pagamento PIX e confirmado ou falha.
-
-**O que faz:**
-- Recebe o callback POST da BS Pay
-- Localiza a transacao pelo `gateway_ref`
-- Atualiza o status para `completed` ou `failed`
-- O trigger que ja existe no banco atualiza o saldo do usuario automaticamente
-
-**Endpoint publico (sem autenticacao)** - webhooks nao enviam JWT.
+Como pode nao ser possivel cadastrar a URL do webhook no gateway BS Pay, vamos implementar um sistema de polling que consulta o status do pagamento diretamente na API da BS Pay ate receber a confirmacao.
 
 ---
 
-### 2. Edge Function: Saque PIX (`process-withdraw`)
+### Como vai funcionar
 
-Permite que o usuario solicite um saque via PIX.
-
-**O que faz:**
-- Verifica autenticacao do usuario
-- Valida saldo suficiente e valor minimo (R$ 20)
-- Autentica com BS Pay (mesmo fluxo de token)
-- Envia a transferencia PIX usando o CPF do usuario como chave
-- Registra a transacao como `pending`
+1. Usuario gera o QR Code PIX na tela de deposito
+2. O frontend inicia um polling automatico a cada 5 segundos
+3. A cada ciclo, chama uma Edge Function que consulta o status do pagamento na API da BS Pay
+4. Quando a BS Pay confirmar o pagamento, a Edge Function atualiza a transacao para `completed`
+5. O trigger do banco atualiza o saldo automaticamente
+6. O frontend detecta a mudanca e mostra o saldo atualizado na tela
 
 ---
 
-### 3. Atualizar pagina de Saque
+### O que sera criado/alterado
 
-Conectar o botao "Solicitar Saque" a Edge Function `process-withdraw`, com feedback de loading e mensagens de erro/sucesso.
+**1. Nova Edge Function: `check-payment-status`**
+- Recebe o `transaction_id` (gateway_ref)
+- Autentica com BS Pay (client_credentials)
+- Consulta o endpoint de status do pagamento na API da BS Pay
+- Se pago: atualiza a transacao para `completed` (trigger credita saldo)
+- Retorna o status atual para o frontend
 
----
+**2. Atualizar pagina de Deposito (`src/pages/Deposit.tsx`)**
+- Apos gerar o QR Code, iniciar polling a cada 5 segundos
+- Chamar a Edge Function `check-payment-status`
+- Quando status mudar para `completed`:
+  - Parar o polling
+  - Mostrar mensagem de sucesso "Pagamento confirmado!"
+  - Atualizar o saldo na tela (chamar `refreshProfile`)
+- Timeout de 10 minutos (parar polling se nao confirmar)
+- Mostrar indicador visual de "Aguardando pagamento..." com animacao
 
-### 4. Adicionar campo de chave PIX no perfil
-
-Permitir que o usuario informe sua chave PIX (CPF, telefone, email ou aleatoria) para receber saques, ja que nem todos usam CPF.
-
----
-
-### O que voce precisa fazer no painel da BS Pay
-
-Cadastrar esta URL como webhook de callback:
-
-```text
-https://mxscgyghoqhrannpmllw.supabase.co/functions/v1/bspay-webhook
-```
-
-O dono da BS Pay precisa configurar para enviar notificacoes POST para essa URL quando o status de um pagamento mudar.
+**3. Atualizar `supabase/config.toml`**
+- Registrar a nova function `check-payment-status`
 
 ---
 
 ### Detalhes Tecnicos
 
-**Arquivos criados:**
-- `supabase/functions/bspay-webhook/index.ts` - Webhook publico
-- `supabase/functions/process-withdraw/index.ts` - Saque PIX autenticado
+**Edge Function `check-payment-status`:**
+- Autenticacao do usuario via JWT (getClaims)
+- Valida que a transacao pertence ao usuario
+- Autentica com BS Pay usando BSPAY_CLIENT_ID e BSPAY_CLIENT_SECRET
+- Consulta status via GET/POST na API BS Pay (endpoint de consulta de transacao)
+- Atualiza no banco usando service role key (bypass RLS)
 
-**Arquivos editados:**
-- `supabase/config.toml` - Registrar as 2 novas functions com `verify_jwt = false`
-- `src/pages/Withdraw.tsx` - Conectar ao backend, adicionar campo de chave PIX e loading state
-- `src/contexts/AuthContext.tsx` - Expor campo `pix_key` do perfil (se adicionarmos ao banco)
+**Polling no frontend:**
+- `setInterval` de 5 segundos apos gerar QR Code
+- Limpa o interval ao desmontar o componente ou ao confirmar pagamento
+- Maximo de 120 tentativas (10 minutos)
+- Feedback visual com spinner e texto "Aguardando pagamento..."
 
-**Migracao de banco:**
-- Adicionar coluna `pix_key` na tabela `profiles` para armazenar a chave PIX do usuario
+**Fluxo visual na tela:**
+- QR Code exibido com contador regressivo
+- Texto "Aguardando pagamento..." pulsando
+- Ao confirmar: animacao de sucesso + saldo atualizado
+- Se expirar: mensagem para tentar novamente
 
-**Webhook (`bspay-webhook`):**
-- Metodo POST, sem autenticacao (publico)
-- Busca transacao por `gateway_ref`
-- Atualiza status via service role key (bypass RLS)
-- O trigger `handle_transaction_status_change` ja cuida de atualizar o saldo
+---
 
-**Saque (`process-withdraw`):**
-- Autenticacao via `getClaims()`
-- Valida saldo consultando `profiles`
-- Chama BS Pay API para transferencia PIX
-- Insere transacao tipo `withdrawal` com status `pending`
-- Webhook recebera callback quando a transferencia for processada
+### Nota sobre o webhook
+
+O webhook (`bspay-webhook`) que ja foi criado continua funcionando. Se no futuro o dono da BS Pay cadastrar a URL, o sistema aceita as duas formas (polling + webhook). O que confirmar primeiro ganha.
 
