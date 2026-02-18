@@ -44,7 +44,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Check transaction belongs to user and is still pending
+    // Check transaction status directly in the database
+    // The webhook updates the status when BS Pay confirms payment
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -52,7 +53,7 @@ Deno.serve(async (req) => {
 
     const { data: tx, error: txError } = await supabase
       .from("transactions")
-      .select("*")
+      .select("id, status, user_id")
       .eq("gateway_ref", gateway_ref)
       .eq("user_id", userId)
       .single();
@@ -64,88 +65,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Already completed
-    if (tx.status === "completed") {
-      return new Response(JSON.stringify({ status: "completed" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    if (tx.status !== "pending") {
-      return new Response(JSON.stringify({ status: tx.status }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Authenticate with BS Pay
-    const clientId = Deno.env.get("BSPAY_CLIENT_ID")!;
-    const clientSecret = Deno.env.get("BSPAY_CLIENT_SECRET")!;
-
-    const credentials = btoa(`${clientId}:${clientSecret}`);
-    const tokenRes = await fetch("https://api.bspay.co/v2/oauth/token", {
-      method: "POST",
-      headers: {
-        "Authorization": `Basic ${credentials}`,
-        "accept": "application/json",
-      },
-    });
-
-    if (!tokenRes.ok) {
-      const errText = await tokenRes.text();
-      console.error("BS Pay token error:", errText);
-      return new Response(JSON.stringify({ error: "Erro ao autenticar com gateway" }), {
-        status: 502,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const tokenData = await tokenRes.json();
-    const accessToken = tokenData.access_token;
-
-    // Check payment status at BS Pay
-    const statusRes = await fetch(`https://api.bspay.co/v2/pix/qrcode/${gateway_ref}`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-
-    if (!statusRes.ok) {
-      const errText = await statusRes.text();
-      console.error("BS Pay status check error:", errText);
-      return new Response(JSON.stringify({ status: "pending" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const statusData = await statusRes.json();
-    console.log("BS Pay status response:", JSON.stringify(statusData));
-
-    // Check if paid - adapt field names to BS Pay API response
-    const isPaid =
-      statusData.status === "paid" ||
-      statusData.status === "completed" ||
-      statusData.status === "approved" ||
-      statusData.paid === true;
-
-    if (isPaid) {
-      // Update transaction to completed - trigger will credit balance
-      const { error: updateError } = await supabase
-        .from("transactions")
-        .update({ status: "completed" })
-        .eq("id", tx.id)
-        .eq("status", "pending");
-
-      if (updateError) {
-        console.error("Transaction update error:", updateError);
-      }
-
-      return new Response(JSON.stringify({ status: "completed" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    return new Response(JSON.stringify({ status: "pending" }), {
+    return new Response(JSON.stringify({ status: tx.status }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {

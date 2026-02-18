@@ -16,7 +16,8 @@ Deno.serve(async (req) => {
     console.log("Webhook received:", JSON.stringify(body));
 
     // Extract transaction reference and status from BS Pay callback
-    const gatewayRef = body.transaction_id || body.id || body.external_id || "";
+    // BS Pay sends: transactionId, status, amount, etc.
+    const gatewayRef = body.transactionId || body.transaction_id || body.id || body.external_id || "";
     const status = body.status || body.payment_status || "";
 
     if (!gatewayRef) {
