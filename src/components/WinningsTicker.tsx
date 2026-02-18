@@ -11,10 +11,10 @@ const getGameImage = (gameName: string): string | null => {
 
 const WinningsTicker = () => {
   return (
-    <div className="w-full overflow-hidden bg-secondary/50 rounded-lg sm:rounded-xl py-2 sm:py-3">
-      <div className="flex items-center gap-2 px-3 sm:px-4 mb-2">
-        <Trophy size={14} className="text-primary sm:w-4 sm:h-4" />
-        <span className="text-xs sm:text-sm font-bold text-foreground">Top Ganhos</span>
+    <div className="w-full overflow-hidden bg-secondary/50 rounded-lg sm:rounded-xl py-3 sm:py-4">
+      <div className="flex items-center gap-2 px-3 sm:px-4 mb-2.5">
+        <Trophy size={16} className="text-primary sm:w-5 sm:h-5" />
+        <span className="text-sm sm:text-base font-bold text-foreground">Top Ganhos</span>
       </div>
       <div className="relative overflow-hidden">
         <div className="flex gap-3 sm:gap-4 animate-marquee whitespace-nowrap">
@@ -23,19 +23,19 @@ const WinningsTicker = () => {
             return (
               <div
                 key={i}
-                className="inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-card border border-border"
+                className="inline-flex items-center gap-2 sm:gap-2.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-card border border-border"
               >
                 {img && (
                   <img
                     src={img}
                     alt={entry.game}
-                    className="w-5 h-5 sm:w-6 sm:h-6 rounded object-cover flex-shrink-0"
+                    className="w-7 h-7 sm:w-8 sm:h-8 rounded object-cover flex-shrink-0"
                     loading="lazy"
                   />
                 )}
-                <span className="text-[10px] sm:text-xs text-muted-foreground">{entry.user}</span>
-                <span className="text-[10px] sm:text-xs text-foreground font-medium">{entry.game}</span>
-                <span className="text-[10px] sm:text-xs font-bold text-primary">{entry.amount}</span>
+                <span className="text-xs sm:text-sm text-muted-foreground">{entry.user}</span>
+                <span className="text-xs sm:text-sm text-foreground font-medium">{entry.game}</span>
+                <span className="text-xs sm:text-sm font-bold text-primary">{entry.amount}</span>
               </div>
             );
           })}
