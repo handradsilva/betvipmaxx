@@ -2,3 +2,9 @@ project_id = "mxscgyghoqhrannpmllw"
 
 [functions.generate-pix]
 verify_jwt = false
+
+[functions.bspay-webhook]
+verify_jwt = false
+
+[functions.process-withdraw]
+verify_jwt = false
