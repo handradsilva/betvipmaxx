@@ -103,7 +103,7 @@ Deno.serve(async (req) => {
           const consultData = await consultRes.json();
           console.log("BS Pay consult response:", JSON.stringify(consultData));
 
-          const bspayStatus = (consultData.status || "").toLowerCase();
+          const bspayStatus = (consultData.requestBody?.status || consultData.status || "").toLowerCase();
           if (bspayStatus === "paid" || bspayStatus === "completed" || bspayStatus === "approved" || bspayStatus === "confirmed") {
             // Update transaction — trigger will credit balance
             const { error: updateError } = await supabase
