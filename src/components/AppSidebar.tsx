@@ -30,12 +30,6 @@ const AppSidebar = ({ open, onClose }: AppSidebarProps) => {
         }`}
       >
         <div className="p-3 space-y-2">
-          {/* CTA Button */}
-          <button className="w-full py-3 rounded-lg bg-primary text-primary-foreground font-bold text-sm neon-glow hover:brightness-110 transition-all flex items-center justify-center gap-2">
-            <Gift size={18} />
-            Ganhe R$ 10,00 grátis 💥
-          </button>
-
           {/* Sports section */}
           <div>
             <button
@@ -82,6 +76,14 @@ const AppSidebar = ({ open, onClose }: AppSidebarProps) => {
                 </Link>
               </div>
             )}
+          </div>
+
+          {/* CTA Button */}
+          <div className="border-t border-border pt-3">
+            <button className="w-full py-3 rounded-lg bg-primary text-primary-foreground font-bold text-sm neon-glow hover:brightness-110 transition-all flex items-center justify-center gap-2">
+              <Gift size={18} />
+              Ganhe R$ 10,00 grátis 💥
+            </button>
           </div>
 
           {/* Quick links */}
