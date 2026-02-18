@@ -132,7 +132,12 @@ const Deposit = () => {
 
   return (
     <Layout>
-      <div className="flex items-center justify-center min-h-[70vh]">
+      <div className="flex flex-col items-center justify-center min-h-[70vh] gap-4">
+        <img
+          src="/images/deposit-banner.webp"
+          alt="Área de depósito - 100% de bônus no primeiro depósito"
+          className="w-full max-w-md rounded-2xl object-cover"
+        />
         <div className="w-full max-w-md p-6 rounded-2xl bg-card border border-border">
           <h1 className="text-2xl font-bold text-foreground mb-6 text-center">Depositar</h1>
 
