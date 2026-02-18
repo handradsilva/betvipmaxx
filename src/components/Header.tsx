@@ -1,17 +1,28 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Search, Menu, X, User, Wallet, Download, Upload, Users, Key, LogOut } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface HeaderProps {
-  isLoggedIn: boolean;
   onToggleSidebar: () => void;
   sidebarOpen: boolean;
 }
 
-const Header = ({ isLoggedIn, onToggleSidebar, sidebarOpen }: HeaderProps) => {
+const Header = ({ onToggleSidebar, sidebarOpen }: HeaderProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [profileOpen, setProfileOpen] = useState(false);
   const navigate = useNavigate();
+  const { user, profile, signOut } = useAuth();
+
+  const isLoggedIn = !!user;
+  const balance = profile?.balance ?? 0;
+  const formattedBalance = `R$ ${balance.toFixed(2).replace(".", ",")}`;
+
+  const handleSignOut = async () => {
+    await signOut();
+    setProfileOpen(false);
+    navigate("/");
+  };
 
   return (
     <header className="sticky top-0 z-50 flex items-center justify-between h-14 px-3 md:px-6 bg-background border-b border-border">
@@ -66,7 +77,7 @@ const Header = ({ isLoggedIn, onToggleSidebar, sidebarOpen }: HeaderProps) => {
                 className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary hover:bg-surface-hover transition-colors"
               >
                 <User size={18} className="text-primary" />
-                <span className="hidden md:inline text-sm font-semibold text-primary">R$ 0,00</span>
+                <span className="text-sm font-semibold text-primary">{formattedBalance}</span>
               </button>
               {profileOpen && (
                 <>
@@ -78,8 +89,8 @@ const Header = ({ isLoggedIn, onToggleSidebar, sidebarOpen }: HeaderProps) => {
                           <User size={20} className="text-primary" />
                         </div>
                         <div>
-                          <p className="text-xs text-muted-foreground">usuario@email.com</p>
-                          <p className="text-sm font-bold text-primary">Saldo: R$ 0,00</p>
+                          <p className="text-xs text-muted-foreground truncate max-w-[160px]">{user?.email}</p>
+                          <p className="text-sm font-bold text-primary">Saldo: {formattedBalance}</p>
                         </div>
                       </div>
                     </div>
@@ -102,7 +113,10 @@ const Header = ({ isLoggedIn, onToggleSidebar, sidebarOpen }: HeaderProps) => {
                           {label}
                         </Link>
                       ))}
-                      <button className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-destructive hover:bg-secondary transition-colors w-full">
+                      <button
+                        onClick={handleSignOut}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-destructive hover:bg-secondary transition-colors w-full"
+                      >
                         <LogOut size={16} />
                         Sair
                       </button>

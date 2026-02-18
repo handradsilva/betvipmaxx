@@ -9,13 +9,10 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  // TODO: replace with real auth state
-  const isLoggedIn = false;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header
-        isLoggedIn={isLoggedIn}
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
         sidebarOpen={sidebarOpen}
       />
