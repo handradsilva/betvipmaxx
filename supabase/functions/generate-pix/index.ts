@@ -54,14 +54,13 @@ Deno.serve(async (req) => {
     const clientId = Deno.env.get("BSPAY_CLIENT_ID")!;
     const clientSecret = Deno.env.get("BSPAY_CLIENT_SECRET")!;
 
-    const tokenRes = await fetch("https://api.bfrpagamentos.com.br/api/oauth/token", {
+    const credentials = btoa(`${clientId}:${clientSecret}`);
+    const tokenRes = await fetch("https://api.bspay.co/v2/oauth/token", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        grant_type: "client_credentials",
-        client_id: clientId,
-        client_secret: clientSecret,
-      }),
+      headers: {
+        "Authorization": `Basic ${credentials}`,
+        "accept": "application/json",
+      },
     });
 
     if (!tokenRes.ok) {
@@ -77,7 +76,7 @@ Deno.serve(async (req) => {
     const accessToken = tokenData.access_token;
 
     // Generate PIX QR Code
-    const pixRes = await fetch("https://api.bfrpagamentos.com.br/api/pix/qrcode", {
+    const pixRes = await fetch("https://api.bspay.co/v2/pix/qrcode", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
