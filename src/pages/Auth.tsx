@@ -1,21 +1,48 @@
 import { useState } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import Layout from "@/components/Layout";
+import { toast } from "@/hooks/use-toast";
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
   const mode = searchParams.get("mode") || "login";
+  const navigate = useNavigate();
+  const { signUp, signIn } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [cpf, setCpf] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const isRegister = mode === "register";
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: integrate with backend
+    setLoading(true);
+
+    try {
+      if (isRegister) {
+        const { error } = await signUp(email, password, phone, cpf);
+        if (error) {
+          toast({ title: "Erro no cadastro", description: error.message, variant: "destructive" });
+        } else {
+          toast({ title: "Conta criada com sucesso!" });
+          navigate("/deposit");
+        }
+      } else {
+        const { error } = await signIn(email, password);
+        if (error) {
+          toast({ title: "Erro ao entrar", description: error.message, variant: "destructive" });
+        } else {
+          toast({ title: "Login realizado!" });
+          navigate("/");
+        }
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -46,19 +73,17 @@ const Auth = () => {
             </div>
 
             {isRegister && (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-1">Telefone</label>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="(11) 99999-9999"
-                    className="w-full px-4 py-3 rounded-lg bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                    required
-                  />
-                </div>
-              </>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">Telefone</label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="(11) 99999-9999"
+                  className="w-full px-4 py-3 rounded-lg bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                  required
+                />
+              </div>
             )}
 
             <div>
@@ -70,6 +95,7 @@ const Auth = () => {
                 placeholder="••••••••"
                 className="w-full px-4 py-3 rounded-lg bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
                 required
+                minLength={6}
               />
             </div>
 
@@ -89,9 +115,10 @@ const Auth = () => {
 
             <button
               type="submit"
-              className="w-full py-3 rounded-lg bg-primary text-primary-foreground font-bold text-sm neon-glow hover:brightness-110 transition-all"
+              disabled={loading}
+              className="w-full py-3 rounded-lg bg-primary text-primary-foreground font-bold text-sm neon-glow hover:brightness-110 transition-all disabled:opacity-50"
             >
-              {isRegister ? "Cadastrar" : "Entrar"}
+              {loading ? "Aguarde..." : isRegister ? "Cadastrar" : "Entrar"}
             </button>
           </form>
 

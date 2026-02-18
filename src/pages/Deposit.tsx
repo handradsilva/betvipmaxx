@@ -1,5 +1,9 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 const presetValues = [
   { label: "R$ 30", value: 30 },
@@ -8,27 +12,55 @@ const presetValues = [
 ];
 
 const Deposit = () => {
+  const { user, profile } = useAuth();
+  const navigate = useNavigate();
   const [amount, setAmount] = useState("");
   const [wantBonus, setWantBonus] = useState(false);
   const [loading, setLoading] = useState(false);
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [brcode, setBrcode] = useState<string | null>(null);
 
+  if (!user) {
+    navigate("/auth?mode=login");
+    return null;
+  }
+
   const handleGenerate = async () => {
-    if (!amount || parseFloat(amount) <= 0) return;
+    const val = parseFloat(amount);
+    if (!val || val <= 0) return;
     setLoading(true);
-    // TODO: integrate BS Pay via edge function
-    setTimeout(() => {
-      setLoading(false);
-      // Placeholder
+
+    try {
+      // Call edge function for BS Pay integration
+      const { data, error } = await supabase.functions.invoke("generate-pix", {
+        body: { amount: val, wantBonus },
+      });
+
+      if (error) throw error;
+
+      if (data?.qrcode_image) {
+        setQrCode(data.qrcode_image);
+        setBrcode(data.brcode || "");
+      } else {
+        // Fallback placeholder for now
+        setQrCode("placeholder");
+        setBrcode("pix-code-placeholder");
+        toast({ title: "QR Code gerado", description: "Integração BS Pay será configurada em breve." });
+      }
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message || "Erro ao gerar QR Code", variant: "destructive" });
+      // Show placeholder anyway for demo
       setQrCode("placeholder");
-      setBrcode("00020126580014br.gov.bcb.pix0136placeholder-pix-code");
-    }, 2000);
+      setBrcode("pix-code-placeholder");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const copyBrcode = () => {
     if (brcode) {
       navigator.clipboard.writeText(brcode);
+      toast({ title: "Copiado!" });
     }
   };
 
@@ -93,7 +125,11 @@ const Deposit = () => {
           ) : (
             <div className="space-y-4 text-center">
               <div className="w-48 h-48 mx-auto bg-foreground rounded-lg flex items-center justify-center">
-                <p className="text-background text-xs">QR Code PIX</p>
+                {qrCode === "placeholder" ? (
+                  <p className="text-background text-xs">QR Code PIX</p>
+                ) : (
+                  <img src={qrCode} alt="QR Code PIX" className="w-full h-full object-contain p-2" />
+                )}
               </div>
               <div>
                 <p className="text-sm text-muted-foreground mb-2">PIX Copia e Cola:</p>
@@ -113,7 +149,7 @@ const Deposit = () => {
                 </div>
               </div>
               <button
-                onClick={() => { setQrCode(null); setBrcode(null); }}
+                onClick={() => { setQrCode(null); setBrcode(null); setAmount(""); }}
                 className="text-sm text-primary hover:underline"
               >
                 Fazer outro depósito
