@@ -25,7 +25,7 @@ const AppSidebar = ({ open, onClose }: AppSidebarProps) => {
       )}
 
       <aside
-        className={`fixed top-14 left-0 bottom-0 z-40 w-60 bg-card border-r border-border overflow-y-auto transition-transform duration-300 ${
+        className={`fixed left-0 bottom-0 z-40 w-60 bg-card border-r border-border overflow-y-auto transition-transform duration-300 top-[5.5rem] md:top-14 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
