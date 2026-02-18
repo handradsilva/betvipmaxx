@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { QRCodeSVG } from "qrcode.react";
 import Layout from "@/components/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -207,11 +208,11 @@ const Deposit = () => {
                 </div>
               ) : (
                 <>
-                  <div className="w-48 h-48 mx-auto bg-foreground rounded-lg flex items-center justify-center">
-                    {qrCode === "placeholder" ? (
-                      <p className="text-background text-xs">QR Code PIX</p>
+                  <div className="w-48 h-48 mx-auto bg-white rounded-lg flex items-center justify-center p-2">
+                    {brcode && brcode !== "pix-code-placeholder" ? (
+                      <QRCodeSVG value={brcode} size={176} />
                     ) : (
-                      <img src={qrCode} alt="QR Code PIX" className="w-full h-full object-contain p-2" />
+                      <p className="text-background text-xs">QR Code PIX</p>
                     )}
                   </div>
 
