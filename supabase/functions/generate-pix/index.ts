@@ -118,6 +118,7 @@ Deno.serve(async (req) => {
     }
 
     const pixData = await pixRes.json();
+    console.log("BS Pay PIX response:", JSON.stringify(pixData));
 
     // Save transaction
     const { error: txError } = await supabase.from("transactions").insert({
@@ -125,9 +126,9 @@ Deno.serve(async (req) => {
       type: "deposit",
       amount,
       status: "pending",
-      brcode: pixData.brcode || pixData.pix_code || "",
-      qrcode_image: pixData.qrcode_image || pixData.qr_code_base64 || "",
-      gateway_ref: pixData.transaction_id || pixData.id || "",
+      brcode: pixData.qrcode || "",
+      qrcode_image: "",
+      gateway_ref: pixData.transactionId || "",
     });
 
     if (txError) {
@@ -136,9 +137,9 @@ Deno.serve(async (req) => {
 
     return new Response(
       JSON.stringify({
-        qrcode_image: pixData.qrcode_image || pixData.qr_code_base64 || "",
-        brcode: pixData.brcode || pixData.pix_code || "",
-        transaction_id: pixData.transaction_id || pixData.id || "",
+        qrcode_image: "",
+        brcode: pixData.qrcode || "",
+        transaction_id: pixData.transactionId || "",
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

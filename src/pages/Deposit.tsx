@@ -88,10 +88,11 @@ const Deposit = () => {
       if (error) throw error;
 
       const txId = data?.transaction_id || "";
+      const pixBrcode = data?.brcode || "";
 
-      if (data?.qrcode_image) {
-        setQrCode(data.qrcode_image);
-        setBrcode(data.brcode || "");
+      if (pixBrcode || data?.qrcode_image) {
+        setQrCode(data?.qrcode_image || "placeholder");
+        setBrcode(pixBrcode);
         setGatewayRef(txId);
         if (txId) startPolling(txId);
       } else {
