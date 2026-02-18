@@ -24,9 +24,9 @@ const BannerCarousel = () => {
   }, [next]);
 
   return (
-    <div className="relative w-full overflow-hidden rounded-lg sm:rounded-xl group">
+    <div className="relative w-full overflow-hidden rounded-lg sm:rounded-xl group max-w-full">
       <div
-        className="flex transition-transform duration-500 ease-out"
+        className="flex transition-transform duration-500 ease-out w-full"
         style={{ transform: `translateX(-${current * 100}%)` }}
       >
         {banners.map((src, i) => (
@@ -34,7 +34,7 @@ const BannerCarousel = () => {
             key={i}
             src={src}
             alt={`Banner ${i + 1}`}
-            className="w-full flex-shrink-0 object-cover aspect-[16/9] sm:aspect-[21/9] md:aspect-[3/1]"
+            className="w-full min-w-full flex-shrink-0 object-cover aspect-[2/1] sm:aspect-[21/9] md:aspect-[3/1]"
             loading={i === 0 ? "eager" : "lazy"}
           />
         ))}
