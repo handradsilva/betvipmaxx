@@ -50,6 +50,20 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Fetch user profile for payer info
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("email, cpf")
+      .eq("user_id", userId)
+      .single();
+
+    if (profileError || !profile) {
+      return new Response(JSON.stringify({ error: "Perfil não encontrado" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // BS Pay auth - get token
     const clientId = Deno.env.get("BSPAY_CLIENT_ID")!;
     const clientSecret = Deno.env.get("BSPAY_CLIENT_SECRET")!;
@@ -83,8 +97,14 @@ Deno.serve(async (req) => {
         Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify({
-        amount: amount.toFixed(2),
-        description: `Depósito PIX - R$ ${amount.toFixed(2)}`,
+        amount: Number(amount),
+        external_id: crypto.randomUUID(),
+        payerQuestion: `Depósito PIX - R$ ${amount.toFixed(2)}`,
+        payer: {
+          name: profile.email.split("@")[0],
+          document: profile.cpf || "00000000000",
+          email: profile.email,
+        },
       }),
     });
 
