@@ -100,6 +100,7 @@ Deno.serve(async (req) => {
         amount: Number(amount),
         external_id: crypto.randomUUID(),
         payerQuestion: `Depósito PIX - R$ ${amount.toFixed(2)}`,
+        postbackUrl: `${Deno.env.get("SUPABASE_URL")!}/functions/v1/bspay-webhook`,
         payer: {
           name: profile.email.split("@")[0],
           document: profile.cpf || "00000000000",
