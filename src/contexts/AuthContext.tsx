@@ -9,6 +9,7 @@ interface Profile {
   phone: string | null;
   cpf: string | null;
   balance: number;
+  pix_key: string | null;
 }
 
 interface AuthContextType {
