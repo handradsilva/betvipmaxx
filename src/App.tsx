@@ -19,30 +19,32 @@ import GameDetail from "./pages/GameDetail";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<ReferralRedirect />} />
-            <Route path="/game/:id" element={<GameDetail />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/deposit" element={<Deposit />} />
-            <Route path="/withdraw" element={<Withdraw />} />
-            <Route path="/wallet" element={<Wallet />} />
-            <Route path="/my-account" element={<MyAccount />} />
-            <Route path="/affiliate" element={<Affiliate />} />
-            <Route path="/sports" element={<Sports />} />
-            <Route path="/admin" element={<Admin />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <AuthProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<ReferralRedirect />} />
+              <Route path="/game/:id" element={<GameDetail />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/deposit" element={<Deposit />} />
+              <Route path="/withdraw" element={<Withdraw />} />
+              <Route path="/wallet" element={<Wallet />} />
+              <Route path="/my-account" element={<MyAccount />} />
+              <Route path="/affiliate" element={<Affiliate />} />
+              <Route path="/sports" element={<Sports />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
