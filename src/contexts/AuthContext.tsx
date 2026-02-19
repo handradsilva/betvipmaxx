@@ -10,6 +10,8 @@ interface Profile {
   cpf: string | null;
   balance: number;
   pix_key: string | null;
+  referral_code: string | null;
+  referred_by: string | null;
 }
 
 interface AuthContextType {

@@ -10,6 +10,7 @@ import Deposit from "./pages/Deposit";
 import Withdraw from "./pages/Withdraw";
 import Wallet from "./pages/Wallet";
 import MyAccount from "./pages/MyAccount";
+import Affiliate from "./pages/Affiliate";
 import NotFound from "./pages/NotFound";
 import Sports from "./pages/Sports";
 
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/withdraw" element={<Withdraw />} />
             <Route path="/wallet" element={<Wallet />} />
             <Route path="/my-account" element={<MyAccount />} />
+            <Route path="/affiliate" element={<Affiliate />} />
             <Route path="/sports" element={<Sports />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
