@@ -7,9 +7,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 const presetValues = [
-  { label: "R$ 30", value: 30 },
-  { label: "Popular🔥 R$ 50", value: 50 },
-  { label: "R$ 100", value: 100 },
+  { label: "R$ 30", value: 30, border: "2px" },
+  { label: "🔥 R$ 50", value: 50, border: "3px" },
+  { label: "R$ 100", value: 100, border: "4px" },
 ];
 
 const POLL_INTERVAL = 5000;
@@ -160,15 +160,21 @@ const Deposit = () => {
               </div>
 
               <div className="flex gap-2">
-                {presetValues.map(({ label, value }) => (
+                {presetValues.map(({ label, value, border }) => (
                   <button
                     key={value}
                     onClick={() => setAmount(String(value))}
-                    className={`flex-1 py-2.5 rounded-lg text-xs font-bold border transition-all ${
+                    className={`flex-1 py-2.5 rounded-lg text-xs font-bold transition-all ${
                       amount === String(value)
-                        ? "bg-primary text-primary-foreground border-primary"
-                        : "bg-secondary text-foreground border-border hover:border-primary"
+                        ? "bg-primary/20 text-primary"
+                        : "bg-secondary text-foreground hover:bg-primary/10"
                     }`}
+                    style={{
+                      border: `${border} solid hsl(var(--primary))`,
+                      boxShadow: amount === String(value)
+                        ? "0 0 12px hsl(var(--primary) / 0.5)"
+                        : "0 0 6px hsl(var(--primary) / 0.2)",
+                    }}
                   >
                     {label}
                   </button>
