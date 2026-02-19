@@ -6,10 +6,10 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 const presetValues = [
-  { label: "R$ 50", value: 50 },
-  { label: "POPULAR R$ 100", value: 100 },
-  { label: "R$ 200", value: 200 },
-  { label: "R$ 500", value: 500 },
+  { label: "R$ 50", value: 50, border: "2px" },
+  { label: "🔥 R$ 100", value: 100, border: "2.5px" },
+  { label: "R$ 200", value: 200, border: "3px" },
+  { label: "R$ 500", value: 500, border: "4px" },
 ];
 
 const Withdraw = () => {
@@ -96,15 +96,21 @@ const Withdraw = () => {
             </div>
 
             <div className="grid grid-cols-2 gap-2">
-              {presetValues.map(({ label, value }) => (
+              {presetValues.map(({ label, value, border }) => (
                 <button
                   key={value}
                   onClick={() => setAmount(String(value))}
-                  className={`py-2.5 rounded-lg text-xs font-bold border transition-all ${
+                  className={`py-2.5 rounded-lg text-xs font-bold transition-all ${
                     amount === String(value)
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-secondary text-foreground border-border hover:border-primary"
+                      ? "bg-[hsl(30,90%,40%)]/20 text-[hsl(30,90%,50%)]"
+                      : "bg-secondary text-foreground hover:bg-[hsl(30,90%,40%)]/10"
                   }`}
+                  style={{
+                    border: `${border} solid hsl(30, 90%, 40%)`,
+                    boxShadow: amount === String(value)
+                      ? "0 0 12px hsla(30, 90%, 40%, 0.5)"
+                      : "0 0 6px hsla(30, 90%, 40%, 0.15)",
+                  }}
                 >
                   {label}
                 </button>
