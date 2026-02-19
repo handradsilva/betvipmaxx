@@ -74,9 +74,6 @@ const Header = ({ onToggleSidebar, sidebarOpen }: HeaderProps) => {
 
           {isLoggedIn ? (
             <>
-              <span className="text-xs sm:text-sm font-bold text-primary whitespace-nowrap">
-                {formattedBalance}
-              </span>
               <button
                 onClick={() => navigate("/deposit")}
                 className="px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold rounded-lg bg-primary text-primary-foreground neon-glow hover:brightness-110 transition-all whitespace-nowrap"
@@ -90,7 +87,7 @@ const Header = ({ onToggleSidebar, sidebarOpen }: HeaderProps) => {
                   className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-secondary hover:bg-surface-hover transition-colors"
                 >
                   <User size={16} className="text-primary sm:w-[18px] sm:h-[18px]" />
-                  <span className="text-xs sm:text-sm font-semibold text-primary hidden xs:inline">{formattedBalance}</span>
+                  <span className="text-xs sm:text-sm font-semibold text-primary">{formattedBalance}</span>
                 </button>
                 {profileOpen && (
                   <>
