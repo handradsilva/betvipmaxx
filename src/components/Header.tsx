@@ -74,6 +74,9 @@ const Header = ({ onToggleSidebar, sidebarOpen }: HeaderProps) => {
 
           {isLoggedIn ? (
             <>
+              <span className="text-xs sm:text-sm font-bold text-primary whitespace-nowrap">
+                {formattedBalance}
+              </span>
               <button
                 onClick={() => navigate("/deposit")}
                 className="px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold rounded-lg bg-primary text-primary-foreground neon-glow hover:brightness-110 transition-all whitespace-nowrap"
