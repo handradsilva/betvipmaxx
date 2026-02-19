@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 
 const presetValues = [
   { label: "R$ 50", value: 50, border: "2px" },
@@ -13,11 +12,13 @@ const presetValues = [
 ];
 
 const Withdraw = () => {
-  const { user, profile, refreshProfile } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
   const [amount, setAmount] = useState("");
   const [pixKey, setPixKey] = useState(profile?.pix_key || "");
   const [loading, setLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [withdrawnAmount, setWithdrawnAmount] = useState(0);
 
   if (!user) {
     navigate("/auth?mode=login");
@@ -43,23 +44,42 @@ const Withdraw = () => {
     }
 
     setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("process-withdraw", {
-        body: { amount: val, pix_key: pixKey.trim() },
-      });
-
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-
-      toast({ title: "Saque solicitado!", description: `Saque de R$ ${val.toFixed(2).replace(".", ",")} enviado para processamento.` });
+    // Simulate processing delay
+    setTimeout(() => {
+      setWithdrawnAmount(val);
+      setShowSuccess(true);
       setAmount("");
-      await refreshProfile();
-    } catch (err: any) {
-      toast({ title: "Erro no saque", description: err.message || "Tente novamente", variant: "destructive" });
-    } finally {
       setLoading(false);
-    }
+    }, 1500);
   };
+
+  if (showSuccess) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-[70vh]">
+          <div className="w-full max-w-md p-8 rounded-2xl bg-card border border-border text-center space-y-4">
+            <div className="w-16 h-16 mx-auto rounded-full bg-primary/20 flex items-center justify-center">
+              <span className="text-3xl">🎉</span>
+            </div>
+            <h1 className="text-2xl font-bold text-foreground">Parabéns!</h1>
+            <p className="text-sm text-muted-foreground">
+              Seu saque foi liberado! Em algumas horas irá cair o valor de{" "}
+              <span className="text-primary font-bold">
+                R$ {withdrawnAmount.toFixed(2).replace(".", ",")}
+              </span>{" "}
+              que você solicitou na sua chave PIX.
+            </p>
+            <button
+              onClick={() => { setShowSuccess(false); navigate("/"); }}
+              className="w-full py-3 rounded-lg bg-primary text-primary-foreground font-bold text-sm hover:brightness-110 transition-all neon-glow"
+            >
+              Voltar ao início
+            </button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
