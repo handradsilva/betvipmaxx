@@ -7,6 +7,7 @@ import { toast } from "@/hooks/use-toast";
 const Auth = () => {
   const [searchParams] = useSearchParams();
   const mode = searchParams.get("mode") || "login";
+  const ref = searchParams.get("ref") || "";
   const navigate = useNavigate();
   const { signUp, signIn } = useAuth();
 
@@ -24,7 +25,7 @@ const Auth = () => {
 
     try {
       if (isRegister) {
-        const { error } = await signUp(email, password, phone, cpf);
+        const { error } = await signUp(email, password, phone, cpf, ref);
         if (error) {
           toast({ title: "Erro no cadastro", description: error.message, variant: "destructive" });
         } else {
