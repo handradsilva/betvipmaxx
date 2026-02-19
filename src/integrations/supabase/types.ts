@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       profiles: {
         Row: {
+          affiliate_approved: boolean
           balance: number
           cpf: string | null
           created_at: string
@@ -29,6 +30,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          affiliate_approved?: boolean
           balance?: number
           cpf?: string | null
           created_at?: string
@@ -42,6 +44,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          affiliate_approved?: boolean
           balance?: number
           cpf?: string | null
           created_at?: string
@@ -122,15 +125,108 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      admin_get_all_profiles: {
+        Args: never
+        Returns: {
+          affiliate_approved: boolean
+          balance: number
+          cpf: string | null
+          created_at: string
+          email: string
+          id: string
+          phone: string | null
+          pix_key: string | null
+          referral_code: string | null
+          referred_by: string | null
+          updated_at: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      admin_get_all_referrals: {
+        Args: never
+        Returns: {
+          commission_amount: number | null
+          created_at: string
+          id: string
+          referred_user_id: string
+          referrer_user_id: string
+          status: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "referrals"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      admin_get_all_transactions: {
+        Args: never
+        Returns: {
+          amount: number
+          brcode: string | null
+          created_at: string
+          gateway_ref: string | null
+          id: string
+          qrcode_image: string | null
+          status: string
+          type: string
+          updated_at: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "transactions"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      admin_toggle_affiliate: {
+        Args: { _approved: boolean; _target_user_id: string }
+        Returns: undefined
+      }
+      admin_update_balance: {
+        Args: { _new_balance: number; _target_user_id: string }
+        Returns: undefined
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -257,6 +353,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const

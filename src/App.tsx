@@ -13,6 +13,7 @@ import MyAccount from "./pages/MyAccount";
 import Affiliate from "./pages/Affiliate";
 import NotFound from "./pages/NotFound";
 import Sports from "./pages/Sports";
+import Admin from "./pages/Admin";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/my-account" element={<MyAccount />} />
             <Route path="/affiliate" element={<Affiliate />} />
             <Route path="/sports" element={<Sports />} />
+            <Route path="/admin" element={<Admin />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
