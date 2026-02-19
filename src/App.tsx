@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
+import ReferralRedirect from "./pages/ReferralRedirect";
 import Auth from "./pages/Auth";
 import Deposit from "./pages/Deposit";
 import Withdraw from "./pages/Withdraw";
@@ -14,6 +15,7 @@ import Affiliate from "./pages/Affiliate";
 import NotFound from "./pages/NotFound";
 import Sports from "./pages/Sports";
 import Admin from "./pages/Admin";
+import GameDetail from "./pages/GameDetail";
 
 const queryClient = new QueryClient();
 
@@ -25,7 +27,8 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Index />} />
+            <Route path="/" element={<ReferralRedirect />} />
+            <Route path="/game/:id" element={<GameDetail />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/deposit" element={<Deposit />} />
             <Route path="/withdraw" element={<Withdraw />} />

@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import type { Game } from "@/data/games";
 
 interface GameCardProps {
@@ -5,8 +6,13 @@ interface GameCardProps {
 }
 
 const GameCard = ({ game }: GameCardProps) => {
+  const navigate = useNavigate();
+
   return (
-    <div className="group relative rounded-lg sm:rounded-xl overflow-hidden game-card-hover cursor-pointer bg-card">
+    <div
+      className="group relative rounded-lg sm:rounded-xl overflow-hidden game-card-hover cursor-pointer bg-card"
+      onClick={() => navigate(`/game/${game.id}`)}
+    >
       <div className="aspect-square overflow-hidden">
         <img
           src={game.image}
