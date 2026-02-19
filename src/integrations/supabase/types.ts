@@ -23,6 +23,8 @@ export type Database = {
           id: string
           phone: string | null
           pix_key: string | null
+          referral_code: string | null
+          referred_by: string | null
           updated_at: string
           user_id: string
         }
@@ -34,6 +36,8 @@ export type Database = {
           id?: string
           phone?: string | null
           pix_key?: string | null
+          referral_code?: string | null
+          referred_by?: string | null
           updated_at?: string
           user_id: string
         }
@@ -45,8 +49,37 @@ export type Database = {
           id?: string
           phone?: string | null
           pix_key?: string | null
+          referral_code?: string | null
+          referred_by?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          commission_amount: number | null
+          created_at: string
+          id: string
+          referred_user_id: string
+          referrer_user_id: string
+          status: string
+        }
+        Insert: {
+          commission_amount?: number | null
+          created_at?: string
+          id?: string
+          referred_user_id: string
+          referrer_user_id: string
+          status?: string
+        }
+        Update: {
+          commission_amount?: number | null
+          created_at?: string
+          id?: string
+          referred_user_id?: string
+          referrer_user_id?: string
+          status?: string
         }
         Relationships: []
       }
