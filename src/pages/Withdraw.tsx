@@ -63,7 +63,7 @@ const Withdraw = () => {
             </div>
             <h1 className="text-2xl font-bold text-foreground">Parabéns!</h1>
             <p className="text-sm text-muted-foreground">
-              Seu saque foi liberado! Em algumas horas irá cair o valor de{" "}
+              Seu saque foi liberado! Em alguns segundos irá cair o valor de{" "}
               <span className="text-primary font-bold">
                 R$ {withdrawnAmount.toFixed(2).replace(".", ",")}
               </span>{" "}
@@ -99,7 +99,7 @@ const Withdraw = () => {
                 value={pixKey}
                 onChange={(e) => setPixKey(e.target.value)}
                 placeholder="CPF, e-mail, telefone ou chave aleatória"
-                className="w-full px-4 py-3 rounded-lg bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                className="w-full px-4 py-3 rounded-lg bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-base"
               />
             </div>
 
@@ -111,7 +111,7 @@ const Withdraw = () => {
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0,00"
                 min="20"
-                className="w-full px-4 py-3 rounded-lg bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                className="w-full px-4 py-3 rounded-lg bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-base"
               />
             </div>
 
