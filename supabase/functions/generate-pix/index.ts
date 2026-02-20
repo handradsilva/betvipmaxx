@@ -88,31 +88,44 @@ Deno.serve(async (req) => {
 
     const tokenData = await tokenRes.json();
     const accessToken = tokenData.access_token;
+    console.log("BS Pay token success, expires_in:", tokenData.expires_in);
 
     // Generate PIX QR Code
+    const cpfClean = (profile.cpf || "").replace(/\D/g, "");
+    
+    const pixBody: Record<string, unknown> = {
+      amount: Number(amount),
+      external_id: crypto.randomUUID(),
+      payerQuestion: "Deposito PIX",
+      postbackUrl: `${Deno.env.get("SUPABASE_URL")!}/functions/v1/bspay-webhook`,
+    };
+
+    // Only include payer if CPF has exactly 11 digits
+    if (cpfClean.length === 11) {
+      pixBody.payer = {
+        name: profile.email.split("@")[0] || "Usuario",
+        document: cpfClean,
+        email: profile.email,
+      };
+    }
+
+    console.log("BS Pay request body:", JSON.stringify(pixBody));
+    
     const pixRes = await fetch("https://api.bspay.co/v2/pix/qrcode", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "accept": "application/json",
         Authorization: `Bearer ${accessToken}`,
       },
-      body: JSON.stringify({
-        amount: Number(amount),
-        external_id: crypto.randomUUID(),
-        payerQuestion: `Depósito PIX - R$ ${amount.toFixed(2)}`,
-        postbackUrl: `${Deno.env.get("SUPABASE_URL")!}/functions/v1/bspay-webhook`,
-        payer: {
-          name: profile.email.split("@")[0],
-          document: profile.cpf || "00000000000",
-          email: profile.email,
-        },
-      }),
+      body: JSON.stringify(pixBody),
     });
 
     if (!pixRes.ok) {
       const errText = await pixRes.text();
-      console.error("BS Pay PIX error:", errText);
-      return new Response(JSON.stringify({ error: "Erro ao gerar QR Code PIX" }), {
+      console.error("BS Pay PIX error status:", pixRes.status, "headers:", JSON.stringify(Object.fromEntries(pixRes.headers.entries())));
+      console.error("BS Pay PIX error body:", errText);
+      return new Response(JSON.stringify({ error: "Erro ao gerar QR Code PIX", details: errText }), {
         status: 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
