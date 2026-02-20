@@ -99,11 +99,11 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         amount: Number(amount),
         external_id: crypto.randomUUID(),
-        payerQuestion: `Depósito PIX - R$ ${amount.toFixed(2)}`,
+        payerQuestion: `Deposito PIX`,
         postbackUrl: `${Deno.env.get("SUPABASE_URL")!}/functions/v1/bspay-webhook`,
         payer: {
-          name: profile.email.split("@")[0],
-          document: profile.cpf || "00000000000",
+          name: profile.email.split("@")[0] || "Usuario",
+          document: (profile.cpf || "00000000000").replace(/\D/g, "").padStart(11, "0").slice(0, 11),
           email: profile.email,
         },
       }),
