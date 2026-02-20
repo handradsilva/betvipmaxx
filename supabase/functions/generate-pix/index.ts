@@ -88,6 +88,7 @@ Deno.serve(async (req) => {
 
     const tokenData = await tokenRes.json();
     const accessToken = tokenData.access_token;
+    console.log("BS Pay token success, expires_in:", tokenData.expires_in);
 
     // Generate PIX QR Code
     const cpfClean = (profile.cpf || "").replace(/\D/g, "");
@@ -121,8 +122,9 @@ Deno.serve(async (req) => {
 
     if (!pixRes.ok) {
       const errText = await pixRes.text();
-      console.error("BS Pay PIX error:", errText);
-      return new Response(JSON.stringify({ error: "Erro ao gerar QR Code PIX" }), {
+      console.error("BS Pay PIX error status:", pixRes.status, "headers:", JSON.stringify(Object.fromEntries(pixRes.headers.entries())));
+      console.error("BS Pay PIX error body:", errText);
+      return new Response(JSON.stringify({ error: "Erro ao gerar QR Code PIX", details: errText }), {
         status: 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
