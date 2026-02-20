@@ -78,7 +78,10 @@ const Deposit = () => {
 
   const handleGenerate = async () => {
     const val = parseFloat(amount);
-    if (!val || val <= 0) return;
+    if (!val || val < 20) {
+      toast({ title: "Valor mínimo", description: "O depósito mínimo é de R$ 20,00.", variant: "destructive" });
+      return;
+    }
     setLoading(true);
 
     try {
@@ -152,7 +155,7 @@ const Deposit = () => {
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     placeholder="0,00"
-                    min="1"
+                    min="20"
                     step="0.01"
                     className="w-full pl-12 pr-4 py-3 rounded-lg bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
                   />
