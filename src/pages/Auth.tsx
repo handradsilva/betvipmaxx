@@ -29,7 +29,7 @@ const Auth = () => {
         if (error) {
           toast({ title: "Erro no cadastro", description: error.message, variant: "destructive" });
         } else {
-          toast({ title: "Conta criada com sucesso!" });
+          toast({ title: "Conta criada com sucesso!", duration: 1000 });
           navigate("/deposit");
         }
       } else {
@@ -37,7 +37,7 @@ const Auth = () => {
         if (error) {
           toast({ title: "Erro ao entrar", description: error.message, variant: "destructive" });
         } else {
-          toast({ title: "Login realizado!" });
+          toast({ title: "Login realizado!", duration: 1000 });
           navigate("/");
         }
       }
