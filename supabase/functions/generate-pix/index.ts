@@ -115,6 +115,7 @@ Deno.serve(async (req) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "accept": "application/json",
         Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify(pixBody),
