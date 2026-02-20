@@ -91,19 +91,23 @@ Deno.serve(async (req) => {
 
     // Generate PIX QR Code
     const cpfClean = (profile.cpf || "").replace(/\D/g, "");
-    const cpfFormatted = cpfClean.length >= 11 ? cpfClean.slice(0, 11) : cpfClean.padStart(11, "0");
     
-    const pixBody = {
+    const pixBody: Record<string, unknown> = {
       amount: Number(amount),
       external_id: crypto.randomUUID(),
       payerQuestion: "Deposito PIX",
       postbackUrl: `${Deno.env.get("SUPABASE_URL")!}/functions/v1/bspay-webhook`,
-      payer: {
-        name: profile.email.split("@")[0] || "Usuario",
-        document: cpfFormatted,
-        email: profile.email,
-      },
     };
+
+    // Only include payer if CPF has exactly 11 digits
+    if (cpfClean.length === 11) {
+      pixBody.payer = {
+        name: profile.email.split("@")[0] || "Usuario",
+        document: cpfClean,
+        email: profile.email,
+      };
+    }
+
     console.log("BS Pay request body:", JSON.stringify(pixBody));
     
     const pixRes = await fetch("https://api.bspay.co/v2/pix/qrcode", {
