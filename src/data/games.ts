@@ -8,8 +8,8 @@ export interface Game {
 
 export const games: Game[] = [
   { id: "1", name: "Fortune Dragon", image: "https://imagedelivery.net/OUTngZrupQp0X-PFiPzvuA/83b26607-b61f-4249-5bca-ef57c10d6200/gamecover", provider: "PGSoft", category: ["recomendados", "pgsoft", "mais-jogados"] },
-  { id: "2", name: "Cash Mania", image: "https://imagedelivery.net/OUTngZrupQp0X-PFiPzvuA/618a2538-6d0a-469b-cd15-1b4c6007aa00/gamecover", provider: "PGSoft", category: ["recomendados", "pgsoft"] },
-  { id: "3", name: "Wild Ape", image: "https://mediumrare.imgix.net/7fb4fbfab2d369897dce91e13c3c3b1a493f9d7037b8a13a11cac9138d68c339?&dpr=2&format=auto&auto=format&q=50", provider: "PGSoft", category: ["recomendados", "pgsoft"] },
+  { id: "2", name: "Cash Mania", image: "/images/cash_mania.avif", provider: "PGSoft", category: ["recomendados", "pgsoft"] },
+  { id: "3", name: "Wild Ape", image: "/images/wild_ape.avif", provider: "PGSoft", category: ["recomendados", "pgsoft"] },
   { id: "4", name: "Fortune Tiger", image: "https://imagedelivery.net/OUTngZrupQp0X-PFiPzvuA/00d5f254-4a0b-4e25-b645-c8add9d1da00/gamecover", provider: "PGSoft", category: ["recomendados", "pgsoft", "mais-jogados"] },
   { id: "5", name: "Fortune Ox", image: "https://imagedelivery.net/OUTngZrupQp0X-PFiPzvuA/7c09bae0-446e-4849-d02a-ac1e71ea1d00/gamecover", provider: "PGSoft", category: ["recomendados", "pgsoft", "mais-jogados"] },
   { id: "6", name: "Fortune Mouse", image: "https://imagedelivery.net/OUTngZrupQp0X-PFiPzvuA/7ed497fe-86ba-473a-5735-9030e6eb1d00/gamecover", provider: "PGSoft", category: ["recomendados", "pgsoft"] },
