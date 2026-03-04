@@ -79,7 +79,7 @@ const Admin = () => {
           </TabsList>
 
           <TabsContent value="dashboard">
-            <AdminDashboard profiles={profiles} transactions={transactions} />
+            <AdminDashboard profiles={profiles} transactions={transactions} referrals={referrals} />
           </TabsContent>
           <TabsContent value="affiliates">
             <AdminAffiliates profiles={profiles} referrals={referrals} transactions={transactions} toggleAffiliate={toggleAffiliate} />
