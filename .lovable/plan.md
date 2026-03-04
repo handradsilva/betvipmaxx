@@ -1,24 +1,31 @@
 
 
-## Plan: Add 2 Affiliate Metric Cards to Dashboard
+## Corrigir erro "supabaseKey is required" na funcao check-payment-status
 
-### What changes
+### Problema
+A funcao `check-payment-status` esta usando `SUPABASE_PUBLISHABLE_KEY` como nome de variavel de ambiente, mas o nome correto no ambiente das Edge Functions e `SUPABASE_ANON_KEY`. Isso faz com que o valor retorne `undefined`, causando o erro `supabaseKey is required` a cada chamada de polling.
 
-**1. Pass `referrals` data to AdminDashboard** (`src/pages/Admin.tsx`)
-- Add `referrals` to the props passed to `<AdminDashboard>`.
+### Impacto
+- O QR Code PIX e o copia e cola funcionam normalmente (generate-pix esta OK)
+- O polling de status do pagamento falha repetidamente (a cada 5 segundos)
+- O pagamento nunca sera confirmado automaticamente na tela, mesmo que o usuario pague
 
-**2. Add affiliate cards in AdminDashboard** (`src/components/admin/AdminDashboard.tsx`)
-- Update Props interface to include `referrals: AdminReferral[]`.
-- For each of the two hardcoded affiliate emails (`filipeafiliado@gmail.com`, `italoafiliado2@gmail.com`):
-  - Find the affiliate profile by email.
-  - Get referred users from `referrals` table (filtered by date range like existing cards).
-  - Calculate: leads brought (today), leads brought (period), FTDs (users who deposited), total deposit volume from their referrals.
-- Render 2 new cards after the existing 6, each showing the affiliate email as label and their key daily/period metrics (e.g., "Leads Hoje: X | Total: Y | Depósitos: R$ Z").
-- Cards follow the same visual style and date filter as existing cards.
+### Correcao
+Alterar uma unica linha no arquivo `supabase/functions/check-payment-status/index.ts`:
 
-### Technical details
+**Linha 25 - de:**
+```text
+Deno.env.get("SUPABASE_PUBLISHABLE_KEY")
+```
 
-- The affiliate lookup uses `profiles.find(p => p.email === "filipeafiliado@gmail.com")` to get the `user_id`, then filters `referrals` by `referrer_user_id` within the date range.
-- Deposit volume is computed by cross-referencing `referred_user_id` list with `transactions` (type=deposit, status=completed).
-- Uses `UserCheck` icon from lucide-react for the affiliate cards.
+**Para:**
+```text
+Deno.env.get("SUPABASE_ANON_KEY")
+```
+
+### Detalhes tecnicos
+- A variavel `SUPABASE_ANON_KEY` e fornecida automaticamente pelo Lovable Cloud em todas as Edge Functions
+- A variavel `SUPABASE_PUBLISHABLE_KEY` nao existe no ambiente das Edge Functions (e usada apenas no frontend como `VITE_SUPABASE_PUBLISHABLE_KEY`)
+- A funcao `generate-pix` ja usa `SUPABASE_ANON_KEY` corretamente, por isso funciona sem problemas
+- Apos a correcao, a funcao sera redeployada automaticamente
 
