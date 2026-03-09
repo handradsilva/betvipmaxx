@@ -19,7 +19,7 @@ const presetValues = [
   { label: "R$ 500", value: 500, border: "4px" },
 ];
 
-const FEE_AMOUNT = 20;
+const FEE_AMOUNT = 21.90;
 const POLL_INTERVAL = 5000;
 const MAX_POLLS = 120;
 
