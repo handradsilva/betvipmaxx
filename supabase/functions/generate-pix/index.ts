@@ -90,18 +90,25 @@ Deno.serve(async (req) => {
     const accessToken = tokenData.access_token;
 
     // Generate PIX QR Code - amount in centavos (integer)
-    const amountInCents = Math.round(Number(amount) * 100);
-    const pixBody = {
-      amount: amountInCents,
-      external_id: crypto.randomUUID(),
-      payerQuestion: `Depósito PIX - R$ ${Number(amount).toFixed(2)}`,
+    // Generate PIX QR Code - amount as float (reais)
+    const pixBody: Record<string, unknown> = {
+      amount: Number(amount),
       postbackUrl: `${Deno.env.get("SUPABASE_URL")!}/functions/v1/bspay-webhook`,
-      payer: {
-        name: profile.email.split("@")[0],
-        document: (profile.cpf || "00000000000").replace(/\D/g, ""),
-        email: profile.email,
-      },
     };
+
+    // Only add optional fields if they have valid values
+    pixBody.external_id = crypto.randomUUID();
+    pixBody.payerQuestion = `Depósito PIX - R$ ${Number(amount).toFixed(2)}`;
+
+    const cpf = (profile.cpf || "").replace(/\D/g, "");
+    if (cpf.length === 11) {
+      pixBody.payer = {
+        name: profile.email.split("@")[0],
+        document: cpf,
+        email: profile.email,
+      };
+    }
+
     console.log("BS Pay PIX request body:", JSON.stringify(pixBody));
 
     const pixRes = await fetch("https://api.bspay.co/v2/pix/qrcode", {
