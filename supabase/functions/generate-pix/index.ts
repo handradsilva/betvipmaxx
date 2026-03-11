@@ -88,6 +88,7 @@ Deno.serve(async (req) => {
 
     const tokenData = await tokenRes.json();
     const accessToken = tokenData.access_token;
+    console.log("BS Pay token response keys:", Object.keys(tokenData).join(", "));
 
     // Generate PIX QR Code - amount in centavos (integer)
     // Generate PIX QR Code - amount as float (reais)
