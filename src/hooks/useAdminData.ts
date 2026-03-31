@@ -56,14 +56,36 @@ export const useAdminData = () => {
 
   const fetchAll = useCallback(async () => {
     if (!user) return;
+
+    // Fetch all pages to bypass the default 1000-row limit
+    const fetchAllPages = async (rpcName: string) => {
+      const pageSize = 1000;
+      let allData: any[] = [];
+      let offset = 0;
+      let hasMore = true;
+      while (hasMore) {
+        const { data, error } = await supabase
+          .rpc(rpcName as any)
+          .range(offset, offset + pageSize - 1);
+        if (error || !data || data.length === 0) {
+          hasMore = false;
+        } else {
+          allData = allData.concat(data);
+          offset += pageSize;
+          if (data.length < pageSize) hasMore = false;
+        }
+      }
+      return allData;
+    };
+
     const [p, t, r] = await Promise.all([
-      supabase.rpc("admin_get_all_profiles"),
-      supabase.rpc("admin_get_all_transactions"),
-      supabase.rpc("admin_get_all_referrals"),
+      fetchAllPages("admin_get_all_profiles"),
+      fetchAllPages("admin_get_all_transactions"),
+      fetchAllPages("admin_get_all_referrals"),
     ]);
-    if (p.data) setProfiles(p.data as AdminProfile[]);
-    if (t.data) setTransactions(t.data as AdminTransaction[]);
-    if (r.data) setReferrals(r.data as AdminReferral[]);
+    setProfiles(p as AdminProfile[]);
+    setTransactions(t as AdminTransaction[]);
+    setReferrals(r as AdminReferral[]);
   }, [user]);
 
   useEffect(() => { checkAdmin(); }, [checkAdmin]);
