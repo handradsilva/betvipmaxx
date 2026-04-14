@@ -6,6 +6,14 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const sanitizeCpf = (value: unknown) =>
+  typeof value === "string" ? value.replace(/\D/g, "").slice(0, 11) : "";
+
+const buildPayerName = (email: string) => {
+  const localPart = email.split("@")[0]?.replace(/[._-]+/g, " ").trim();
+  return (localPart || "Cliente PIX").slice(0, 60);
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -42,8 +50,11 @@ Deno.serve(async (req) => {
     }
     const userId = claimsData.claims.sub;
 
-    const { amount, wantBonus } = await req.json();
-    if (!amount || amount <= 0) {
+    const body = await req.json();
+    const amount = Number(body?.amount);
+    const providedCpf = sanitizeCpf(body?.cpf);
+
+    if (!Number.isFinite(amount) || amount <= 0) {
       return new Response(JSON.stringify({ error: "Valor inválido" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -101,14 +112,19 @@ Deno.serve(async (req) => {
     pixBody.external_id = crypto.randomUUID();
     pixBody.payerQuestion = `Depósito PIX - R$ ${Number(amount).toFixed(2)}`;
 
-    const cpf = (profile.cpf || "").replace(/\D/g, "");
-    if (cpf.length === 11) {
-      pixBody.payer = {
-        name: profile.email.split("@")[0],
-        document: cpf,
-        email: profile.email,
-      };
+    const payerCpf = providedCpf || sanitizeCpf(profile.cpf);
+    if (payerCpf.length !== 11) {
+      return new Response(JSON.stringify({ error: "CPF válido é obrigatório para gerar o PIX" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
+
+    pixBody.payer = {
+      name: buildPayerName(profile.email),
+      document: payerCpf,
+      email: profile.email,
+    };
 
     console.log("BS Pay PIX request body:", JSON.stringify(pixBody));
 
