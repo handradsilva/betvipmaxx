@@ -15,10 +15,22 @@ const presetValues = [
 const POLL_INTERVAL = 5000;
 const MAX_POLLS = 120; // 10 minutes
 
+const sanitizeCpf = (value: string) => value.replace(/\D/g, "").slice(0, 11);
+
+const formatCpf = (value: string) => {
+  const digits = sanitizeCpf(value);
+
+  return digits
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+};
+
 const Deposit = () => {
   const { user, profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const [amount, setAmount] = useState("");
+  const [cpf, setCpf] = useState(profile?.cpf ?? "");
   const [wantBonus, setWantBonus] = useState(false);
   const [loading, setLoading] = useState(false);
   const [qrCode, setQrCode] = useState<string | null>(null);
@@ -35,10 +47,21 @@ const Deposit = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (profile?.cpf && !cpf) {
+      setCpf(profile.cpf);
+    }
+  }, [profile?.cpf, cpf]);
+
   if (!user) {
     navigate("/auth?mode=login");
     return null;
   }
+
+  const profileCpf = sanitizeCpf(profile?.cpf ?? "");
+  const inputCpf = sanitizeCpf(cpf);
+  const effectiveCpf = inputCpf.length === 11 ? inputCpf : profileCpf;
+  const needsCpf = profileCpf.length !== 11;
 
   const startPolling = (ref: string) => {
     if (pollRef.current) clearInterval(pollRef.current);
@@ -59,7 +82,7 @@ const Deposit = () => {
       }
 
       try {
-        const { data, error } = await supabase.functions.invoke("check-payment-status", {
+        const { data } = await supabase.functions.invoke("check-payment-status", {
           body: { gateway_ref: ref },
         });
 
@@ -82,32 +105,62 @@ const Deposit = () => {
       toast({ title: "Valor mínimo", description: "O depósito mínimo é de R$ 20,00.", variant: "destructive" });
       return;
     }
+
+    if (effectiveCpf.length !== 11) {
+      toast({
+        title: "CPF obrigatório",
+        description: "Informe um CPF válido para gerar o PIX do depósito.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
+      if (inputCpf.length === 11 && inputCpf !== profileCpf) {
+        const { error: profileError } = await supabase
+          .from("profiles")
+          .update({ cpf: inputCpf })
+          .eq("user_id", user.id);
+
+        if (profileError) {
+          throw new Error("Não foi possível salvar seu CPF para o depósito.");
+        }
+
+        await refreshProfile();
+      }
+
       const { data, error } = await supabase.functions.invoke("generate-pix", {
-        body: { amount: val, wantBonus },
+        body: { amount: val, wantBonus, cpf: effectiveCpf },
       });
 
-      if (error) throw error;
+      if (error) {
+        let errorMessage = "Erro ao gerar QR Code";
+
+        try {
+          const errorData = await error.context.json();
+          errorMessage = errorData?.error || errorMessage;
+        } catch {
+          errorMessage = error.message || errorMessage;
+        }
+
+        throw new Error(errorMessage);
+      }
 
       const txId = data?.transaction_id || "";
       const pixBrcode = data?.brcode || "";
 
-      if (pixBrcode || data?.qrcode_image) {
-        setQrCode(data?.qrcode_image || "placeholder");
-        setBrcode(pixBrcode);
-        setGatewayRef(txId);
-        if (txId) startPolling(txId);
-      } else {
-        setQrCode("placeholder");
-        setBrcode("pix-code-placeholder");
-        toast({ title: "QR Code gerado", description: "Integração BS Pay será configurada em breve." });
+      if (!pixBrcode) {
+        throw new Error("O gateway não retornou o PIX copia e cola.");
       }
+
+      setQrCode(data?.qrcode_image || "generated");
+      setBrcode(pixBrcode);
+      setGatewayRef(txId);
+      if (txId) startPolling(txId);
     } catch (err: any) {
       toast({ title: "Erro", description: err.message || "Erro ao gerar QR Code", variant: "destructive" });
-      setQrCode("placeholder");
-      setBrcode("pix-code-placeholder");
     } finally {
       setLoading(false);
     }
@@ -162,6 +215,24 @@ const Deposit = () => {
                 </div>
               </div>
 
+              {needsCpf && (
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1">CPF do pagador: *</label>
+                  <input
+                    type="text"
+                    value={cpf}
+                    onChange={(e) => setCpf(formatCpf(e.target.value))}
+                    placeholder="000.000.000-00"
+                    inputMode="numeric"
+                    maxLength={14}
+                    className="w-full px-4 py-3 rounded-lg bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    O gateway PIX exige um CPF válido do titular para gerar o QR Code e o copia e cola.
+                  </p>
+                </div>
+              )}
+
               <div className="flex gap-2">
                 {presetValues.map(({ label, value, border }) => (
                   <button
@@ -196,7 +267,7 @@ const Deposit = () => {
 
               <button
                 onClick={handleGenerate}
-                disabled={loading || !amount}
+                disabled={loading || !amount || effectiveCpf.length !== 11}
                 className="w-full py-3 rounded-lg bg-primary text-primary-foreground font-bold text-sm neon-glow hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? "Gerando..." : "Gerar QR Code"}
