@@ -82,7 +82,7 @@ const Deposit = () => {
       }
 
       try {
-        const { data, error } = await supabase.functions.invoke("check-payment-status", {
+        const { data } = await supabase.functions.invoke("check-payment-status", {
           body: { gateway_ref: ref },
         });
 
