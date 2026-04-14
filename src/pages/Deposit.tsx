@@ -53,6 +53,14 @@ const Deposit = () => {
     }
   }, [profile?.cpf, cpf]);
 
+  // Stop polling if user logs out
+  useEffect(() => {
+    if (!user && pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+  }, [user]);
+
   if (!user) {
     navigate("/auth?mode=login");
     return null;
