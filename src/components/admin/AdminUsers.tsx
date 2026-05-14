@@ -30,14 +30,13 @@ const AdminUsers = ({ profiles, transactions }: Props) => {
         return isAfter(d, s) && isBefore(d, e);
       })
       .filter((p) => {
-        if (!search) return true;
-        const q = search.toLowerCase();
+        const q = search.trim().toLowerCase();
+        if (!q) return true;
         const cpfDigits = (p.cpf || "").replace(/\D/g, "");
-        const queryDigits = search.replace(/\D/g, "");
-        return (
-          p.email.toLowerCase().includes(q) ||
-          (queryDigits.length > 0 && cpfDigits.includes(queryDigits))
-        );
+        const queryDigits = q.replace(/\D/g, "");
+        const emailMatch = p.email.toLowerCase().includes(q);
+        const cpfMatch = queryDigits.length > 0 && cpfDigits.length > 0 && cpfDigits.includes(queryDigits);
+        return emailMatch || cpfMatch;
       });
   }, [profiles, search, startDate, endDate]);
 
