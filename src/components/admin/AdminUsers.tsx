@@ -148,7 +148,7 @@ const AdminUsers = ({ profiles, transactions }: Props) => {
 
               <TabsContent value="financeiro" className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <StatCard title="Saldo Real" value={formatBRL(Number(selected.balance))} />
+                  <StatCard title="Saldo Atual" value={formatBRL(totalDeposited)} />
                   <StatCard title="Total Depositado" value={formatBRL(totalDeposited)} subtitle={`${completedDeposits.length} depósito(s)`} />
                   <StatCard title="Total Retirado" value={formatBRL(totalWithdrawn)} />
                 </div>
