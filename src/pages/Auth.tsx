@@ -27,7 +27,12 @@ const Auth = () => {
 
     try {
       if (isRegister) {
-        const { error } = await signUp(email, password, phone, cpf, ref, fullName);
+        if (!isValidCpf(cpf)) {
+          toast({ title: "CPF inválido", description: "Digite um CPF válido para continuar.", variant: "destructive" });
+          setLoading(false);
+          return;
+        }
+        const { error } = await signUp(email, password, phone, cleanCpf(cpf), ref, fullName);
         if (error) {
           toast({ title: "Erro no cadastro", description: error.message, variant: "destructive" });
         } else {
