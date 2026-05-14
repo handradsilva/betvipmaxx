@@ -76,6 +76,20 @@ const Auth = () => {
 
             {isRegister && (
               <div>
+                <label className="block text-sm font-medium text-foreground mb-1">Nome completo</label>
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Seu nome completo"
+                  className="w-full px-4 py-3 rounded-lg bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-base"
+                  required
+                />
+              </div>
+            )}
+
+            {isRegister && (
+              <div>
                 <label className="block text-sm font-medium text-foreground mb-1">Telefone</label>
                 <input
                   type="tel"
