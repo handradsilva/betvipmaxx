@@ -26,7 +26,7 @@ const Auth = () => {
 
     try {
       if (isRegister) {
-        const { error } = await signUp(email, password, phone, cpf, ref);
+        const { error } = await signUp(email, password, phone, cpf, ref, fullName);
         if (error) {
           toast({ title: "Erro no cadastro", description: error.message, variant: "destructive" });
         } else {
