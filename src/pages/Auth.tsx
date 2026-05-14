@@ -3,6 +3,7 @@ import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Layout from "@/components/Layout";
 import { toast } from "@/hooks/use-toast";
+import { isValidCpf, formatCpf, cleanCpf } from "@/lib/cpf";
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
