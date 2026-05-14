@@ -15,6 +15,7 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [cpf, setCpf] = useState("");
+  const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
 
   const isRegister = mode === "register";
@@ -25,7 +26,7 @@ const Auth = () => {
 
     try {
       if (isRegister) {
-        const { error } = await signUp(email, password, phone, cpf, ref);
+        const { error } = await signUp(email, password, phone, cpf, ref, fullName);
         if (error) {
           toast({ title: "Erro no cadastro", description: error.message, variant: "destructive" });
         } else {
@@ -72,6 +73,20 @@ const Auth = () => {
                 required
               />
             </div>
+
+            {isRegister && (
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">Nome completo</label>
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Seu nome completo"
+                  className="w-full px-4 py-3 rounded-lg bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-base"
+                  required
+                />
+              </div>
+            )}
 
             {isRegister && (
               <div>

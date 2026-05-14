@@ -130,6 +130,9 @@ const AdminUsers = ({ profiles, transactions }: Props) => {
 
               <TabsContent value="perfil" className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {parseISO(selected.created_at) >= new Date(2026, 4, 14) && (
+                    <Field label="Nome completo" value={selected.full_name || "—"} />
+                  )}
                   <Field label="E-mail" value={selected.email} />
                   <Field label="Telefone" value={selected.phone || "—"} />
                   <Field label="CPF" value={selected.cpf || "—"} />
@@ -145,7 +148,7 @@ const AdminUsers = ({ profiles, transactions }: Props) => {
 
               <TabsContent value="financeiro" className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <StatCard title="Saldo Real" value={formatBRL(Number(selected.balance))} />
+                  <StatCard title="Saldo Atual" value={formatBRL(totalDeposited)} />
                   <StatCard title="Total Depositado" value={formatBRL(totalDeposited)} subtitle={`${completedDeposits.length} depósito(s)`} />
                   <StatCard title="Total Retirado" value={formatBRL(totalWithdrawn)} />
                 </div>

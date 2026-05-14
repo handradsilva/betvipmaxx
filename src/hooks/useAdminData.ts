@@ -13,6 +13,7 @@ export interface AdminProfile {
   referral_code: string | null;
   referred_by: string | null;
   affiliate_approved: boolean;
+  full_name: string | null;
   created_at: string;
   updated_at: string;
 }
