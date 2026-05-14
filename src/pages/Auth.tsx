@@ -3,6 +3,7 @@ import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Layout from "@/components/Layout";
 import { toast } from "@/hooks/use-toast";
+import { isValidCpf, formatCpf, cleanCpf } from "@/lib/cpf";
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
@@ -26,7 +27,12 @@ const Auth = () => {
 
     try {
       if (isRegister) {
-        const { error } = await signUp(email, password, phone, cpf, ref, fullName);
+        if (!isValidCpf(cpf)) {
+          toast({ title: "CPF inválido", description: "Digite um CPF válido para continuar.", variant: "destructive" });
+          setLoading(false);
+          return;
+        }
+        const { error } = await signUp(email, password, phone, cleanCpf(cpf), ref, fullName);
         if (error) {
           toast({ title: "Erro no cadastro", description: error.message, variant: "destructive" });
         } else {
@@ -120,12 +126,17 @@ const Auth = () => {
                 <label className="block text-sm font-medium text-foreground mb-1">Chave PIX para saques (CPF)</label>
                 <input
                   type="text"
+                  inputMode="numeric"
                   value={cpf}
-                  onChange={(e) => setCpf(e.target.value)}
+                  onChange={(e) => setCpf(formatCpf(e.target.value))}
                   placeholder="000.000.000-00"
+                  maxLength={14}
                   className="w-full px-4 py-3 rounded-lg bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-base"
                   required
                 />
+                {cpf.length > 0 && !isValidCpf(cpf) && (
+                  <p className="text-xs text-destructive mt-1">CPF inválido</p>
+                )}
               </div>
             )}
 
