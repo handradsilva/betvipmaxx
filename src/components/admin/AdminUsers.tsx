@@ -29,7 +29,16 @@ const AdminUsers = ({ profiles, transactions }: Props) => {
         const d = parseISO(p.created_at);
         return isAfter(d, s) && isBefore(d, e);
       })
-      .filter((p) => !search || p.email.toLowerCase().includes(search.toLowerCase()));
+      .filter((p) => {
+        if (!search) return true;
+        const q = search.toLowerCase();
+        const cpfDigits = (p.cpf || "").replace(/\D/g, "");
+        const queryDigits = search.replace(/\D/g, "");
+        return (
+          p.email.toLowerCase().includes(q) ||
+          (queryDigits.length > 0 && cpfDigits.includes(queryDigits))
+        );
+      });
   }, [profiles, search, startDate, endDate]);
 
   const userTx = useMemo(() => {
