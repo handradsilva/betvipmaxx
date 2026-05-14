@@ -130,6 +130,9 @@ const AdminUsers = ({ profiles, transactions }: Props) => {
 
               <TabsContent value="perfil" className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {parseISO(selected.created_at) >= new Date(2026, 4, 14) && (
+                    <Field label="Nome completo" value={selected.full_name || "—"} />
+                  )}
                   <Field label="E-mail" value={selected.email} />
                   <Field label="Telefone" value={selected.phone || "—"} />
                   <Field label="CPF" value={selected.cpf || "—"} />
