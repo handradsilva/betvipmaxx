@@ -21,6 +21,7 @@ export type Database = {
           cpf: string | null
           created_at: string
           email: string
+          full_name: string | null
           id: string
           phone: string | null
           pix_key: string | null
@@ -35,6 +36,7 @@ export type Database = {
           cpf?: string | null
           created_at?: string
           email: string
+          full_name?: string | null
           id?: string
           phone?: string | null
           pix_key?: string | null
@@ -49,6 +51,7 @@ export type Database = {
           cpf?: string | null
           created_at?: string
           email?: string
+          full_name?: string | null
           id?: string
           phone?: string | null
           pix_key?: string | null
@@ -156,6 +159,7 @@ export type Database = {
           cpf: string | null
           created_at: string
           email: string
+          full_name: string | null
           id: string
           phone: string | null
           pix_key: string | null
