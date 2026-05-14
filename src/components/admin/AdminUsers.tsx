@@ -29,7 +29,16 @@ const AdminUsers = ({ profiles, transactions }: Props) => {
         const d = parseISO(p.created_at);
         return isAfter(d, s) && isBefore(d, e);
       })
-      .filter((p) => !search || p.email.toLowerCase().includes(search.toLowerCase()));
+      .filter((p) => {
+        if (!search) return true;
+        const q = search.toLowerCase();
+        const cpfDigits = (p.cpf || "").replace(/\D/g, "");
+        const queryDigits = search.replace(/\D/g, "");
+        return (
+          p.email.toLowerCase().includes(q) ||
+          (queryDigits.length > 0 && cpfDigits.includes(queryDigits))
+        );
+      });
   }, [profiles, search, startDate, endDate]);
 
   const userTx = useMemo(() => {
@@ -55,7 +64,7 @@ const AdminUsers = ({ profiles, transactions }: Props) => {
       <div className="relative">
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder="Buscar por e-mail..."
+          placeholder="Buscar por e-mail ou CPF..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-9 h-9 text-sm bg-secondary"
