@@ -64,7 +64,7 @@ const AdminUsers = ({ profiles, transactions }: Props) => {
       <div className="relative">
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder="Buscar por e-mail ou CPF..."
+          placeholder="Buscar por nome, e-mail ou CPF..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-9 h-9 text-sm bg-secondary"
