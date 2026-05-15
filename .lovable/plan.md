@@ -1,31 +1,17 @@
+## Objetivo
+Expandir a busca da aba "Usuários" no painel admin para também encontrar leads pelo **nome completo** (`full_name`), além de e-mail e CPF.
 
+## Alterações
 
-## Corrigir erro "supabaseKey is required" na funcao check-payment-status
+**`src/components/admin/AdminUsers.tsx`**
+- Atualizar o placeholder do input para: `"Buscar por nome, e-mail ou CPF..."`
+- No filtro `useMemo`, adicionar match por nome:
+  - `nameMatch = (p.full_name || "").toLowerCase().includes(q)`
+  - Retornar `emailMatch || cpfMatch || nameMatch`
+- Manter a normalização de CPF (com/sem pontos e hífen) já existente.
+- Busca case-insensitive e por substring (ex: digitar "joão" encontra "João da Silva").
 
-### Problema
-A funcao `check-payment-status` esta usando `SUPABASE_PUBLISHABLE_KEY` como nome de variavel de ambiente, mas o nome correto no ambiente das Edge Functions e `SUPABASE_ANON_KEY`. Isso faz com que o valor retorne `undefined`, causando o erro `supabaseKey is required` a cada chamada de polling.
-
-### Impacto
-- O QR Code PIX e o copia e cola funcionam normalmente (generate-pix esta OK)
-- O polling de status do pagamento falha repetidamente (a cada 5 segundos)
-- O pagamento nunca sera confirmado automaticamente na tela, mesmo que o usuario pague
-
-### Correcao
-Alterar uma unica linha no arquivo `supabase/functions/check-payment-status/index.ts`:
-
-**Linha 25 - de:**
-```text
-Deno.env.get("SUPABASE_PUBLISHABLE_KEY")
-```
-
-**Para:**
-```text
-Deno.env.get("SUPABASE_ANON_KEY")
-```
-
-### Detalhes tecnicos
-- A variavel `SUPABASE_ANON_KEY` e fornecida automaticamente pelo Lovable Cloud em todas as Edge Functions
-- A variavel `SUPABASE_PUBLISHABLE_KEY` nao existe no ambiente das Edge Functions (e usada apenas no frontend como `VITE_SUPABASE_PUBLISHABLE_KEY`)
-- A funcao `generate-pix` ja usa `SUPABASE_ANON_KEY` corretamente, por isso funciona sem problemas
-- Apos a correcao, a funcao sera redeployada automaticamente
-
+## Observações
+- `full_name` já existe em `AdminProfile` e é populado para cadastros a partir de 14/05/2026.
+- Leads antigos sem nome simplesmente não casam pelo nome, mas continuam encontráveis por e-mail/CPF.
+- Nenhuma alteração de backend, schema ou lógica de negócio.

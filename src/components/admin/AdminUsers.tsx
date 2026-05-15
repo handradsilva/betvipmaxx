@@ -36,7 +36,8 @@ const AdminUsers = ({ profiles, transactions }: Props) => {
         const queryDigits = q.replace(/\D/g, "");
         const emailMatch = p.email.toLowerCase().includes(q);
         const cpfMatch = queryDigits.length > 0 && cpfDigits.length > 0 && cpfDigits.includes(queryDigits);
-        return emailMatch || cpfMatch;
+        const nameMatch = (p.full_name || "").toLowerCase().includes(q);
+        return emailMatch || cpfMatch || nameMatch;
       });
   }, [profiles, search, startDate, endDate]);
 
