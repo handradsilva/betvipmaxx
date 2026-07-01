@@ -140,7 +140,8 @@ Deno.serve(async (req) => {
     });
   } catch (err) {
     console.error("check-payment-status error:", err);
-    return new Response(JSON.stringify({ error: err.message }), {
+    const message = err instanceof Error ? err.message : "Erro interno ao consultar pagamento";
+    return new Response(JSON.stringify({ error: message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
