@@ -15,12 +15,12 @@ Deno.serve(async (req) => {
     const body = await req.json();
     console.log("Webhook received:", JSON.stringify(body));
 
-    // BS Pay sends data inside requestBody wrapper
-    const payload = body.requestBody || body;
+    // BS Pay can send legacy payloads directly/requestBody or modern v2 payloads in data.
+    const payload = body.data || body.requestBody || body;
     
     // Extract transaction reference and status
-    const gatewayRef = payload.transactionId || payload.transaction_id || payload.id || payload.external_id || "";
-    const status = payload.status || payload.payment_status || "";
+    const gatewayRef = body.transaction_id || payload.transaction_id || payload.transactionId || payload.id || payload.external_id || "";
+    const status = payload.status_label || payload.status || payload.payment_status || body.event || "";
 
     if (!gatewayRef) {
       console.error("No transaction reference in webhook payload");
@@ -58,20 +58,25 @@ Deno.serve(async (req) => {
     }
 
     // Map BS Pay status to our status
-    const normalizedStatus = status.toLowerCase();
+    const normalizedStatus = String(status).toLowerCase();
     let newStatus = "pending";
     if (
+      normalizedStatus === "1" ||
       normalizedStatus === "paid" ||
       normalizedStatus === "completed" ||
       normalizedStatus === "approved" ||
-      normalizedStatus === "confirmed"
+      normalizedStatus === "confirmed" ||
+      normalizedStatus === "cashin.confirmed"
     ) {
       newStatus = "completed";
     } else if (
+      normalizedStatus === "0" ||
       normalizedStatus === "failed" ||
       normalizedStatus === "cancelled" ||
       normalizedStatus === "expired" ||
-      normalizedStatus === "refused"
+      normalizedStatus === "refused" ||
+      normalizedStatus === "cashin.expired" ||
+      normalizedStatus === "cashin.refunded"
     ) {
       newStatus = "failed";
     }
