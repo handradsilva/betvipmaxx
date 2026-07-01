@@ -35,6 +35,7 @@ const Deposit = () => {
   const [loading, setLoading] = useState(false);
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [brcode, setBrcode] = useState<string | null>(null);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
   const [_gatewayRef, setGatewayRef] = useState<string | null>(null);
   const [paymentStatus, setPaymentStatus] = useState<"waiting" | "confirmed" | "expired" | null>(null);
   const [pollCount, setPollCount] = useState(0);
@@ -124,6 +125,7 @@ const Deposit = () => {
     }
 
     setLoading(true);
+    setPaymentError(null);
 
     try {
       if (inputCpf.length === 11 && inputCpf !== profileCpf) {
@@ -159,6 +161,11 @@ const Deposit = () => {
       const txId = data?.transaction_id || "";
       const pixBrcode = data?.brcode || "";
 
+      if (data?.provider_unavailable) {
+        setPaymentError(data?.error || "O provedor de pagamento está temporariamente indisponível. Tente novamente em instantes.");
+        return;
+      }
+
       if (!pixBrcode) {
         throw new Error("O gateway não retornou o PIX copia e cola.");
       }
@@ -186,6 +193,7 @@ const Deposit = () => {
     pollRef.current = null;
     setQrCode(null);
     setBrcode(null);
+    setPaymentError(null);
     setGatewayRef(null);
     setPaymentStatus(null);
     setPollCount(0);
@@ -238,6 +246,12 @@ const Deposit = () => {
                   <p className="mt-1 text-xs text-muted-foreground">
                     O gateway PIX exige um CPF válido do titular para gerar o QR Code e o copia e cola.
                   </p>
+                </div>
+              )}
+
+              {paymentError && (
+                <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                  {paymentError}
                 </div>
               )}
 
