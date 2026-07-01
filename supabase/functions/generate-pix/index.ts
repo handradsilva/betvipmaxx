@@ -244,11 +244,17 @@ Deno.serve(async (req) => {
         pixResult.json?.message ||
         "O provedor de pagamento está temporariamente indisponível. Tente novamente em instantes.";
 
+      const isProviderUnavailable = pixResult.status >= 500 || pixResult.status === 0;
+
       return new Response(
         JSON.stringify({
-          error: pixResult.status >= 500 ? upstreamMessage : "Erro ao gerar QR Code PIX",
+          error: isProviderUnavailable ? upstreamMessage : "Erro ao gerar QR Code PIX",
+          provider_unavailable: isProviderUnavailable,
         }),
-        { status: pixResult.status >= 500 ? 503 : 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        {
+          status: isProviderUnavailable ? 200 : 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
       );
     }
 
