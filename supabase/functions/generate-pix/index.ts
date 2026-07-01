@@ -128,22 +128,39 @@ Deno.serve(async (req) => {
 
     console.log("BS Pay PIX request body:", JSON.stringify(pixBody));
 
-    const pixRes = await fetch("https://api.bspay.co/v2/pix/qrcode", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify(pixBody),
-    });
-
-    if (!pixRes.ok) {
-      const errText = await pixRes.text();
-      console.error("BS Pay PIX error:", errText);
-      return new Response(JSON.stringify({ error: "Erro ao gerar QR Code PIX" }), {
-        status: 502,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    // Retry on transient upstream errors (Cloudflare 5xx from BS Pay)
+    let pixRes: Response | null = null;
+    let lastErrText = "";
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      pixRes = await fetch("https://api.bspay.co/v2/pix/qrcode", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(pixBody),
       });
+
+      if (pixRes.ok) break;
+
+      lastErrText = await pixRes.text();
+      const isTransient = pixRes.status >= 500 && pixRes.status < 600;
+      console.error(`BS Pay PIX error (attempt ${attempt}, status ${pixRes.status}):`, lastErrText.slice(0, 300));
+
+      if (!isTransient || attempt === 3) break;
+      await new Promise((r) => setTimeout(r, 800 * attempt));
+    }
+
+    if (!pixRes || !pixRes.ok) {
+      const isUpstream = pixRes && pixRes.status >= 500;
+      return new Response(
+        JSON.stringify({
+          error: isUpstream
+            ? "O provedor de pagamento está temporariamente indisponível. Tente novamente em instantes."
+            : "Erro ao gerar QR Code PIX",
+        }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const pixData = await pixRes.json();
