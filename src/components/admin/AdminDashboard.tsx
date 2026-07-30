@@ -111,7 +111,7 @@ const AdminDashboard = ({ profiles, transactions, referrals, refetch }: Props) =
     { label: "Cadastros Hoje", value: todayUsers.length, icon: UserPlus, color: "text-primary" },
     { label: "Total Depósitos", value: brl(totalPixValue), icon: TrendingUp, color: "text-primary" },
     { label: "PIX Gerados (Geral)", value: `${deposits.length} (${paidDeposits.length} Pagos)`, icon: QrCode, color: "text-primary" },
-    { label: "PIX Pendentes (Período)", value: `${pendingDeposits.length} · ${brl(pendingValue)}`, icon: Clock, color: "text-muted-foreground" },
+    
   ];
 
   const chartData = useMemo(() => {
