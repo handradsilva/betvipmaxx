@@ -146,6 +146,56 @@ const AdminDashboard = ({ profiles, transactions, referrals, refetch }: Props) =
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paidDeposits, profiles, startKey, endKey]);
 
+  const hourFmt = useMemo(
+    () => new Intl.DateTimeFormat("en-GB", { timeZone: TZ, hour: "2-digit", hour12: false }),
+    []
+  );
+  const weekdayFmt = useMemo(
+    () => new Intl.DateTimeFormat("en-US", { timeZone: TZ, weekday: "short" }),
+    []
+  );
+
+  const hourlyData = useMemo(() => {
+    const buckets = Array.from({ length: 24 }, (_, h) => ({
+      name: `${String(h).padStart(2, "0")}h`,
+      valor: 0,
+      qtd: 0,
+    }));
+    for (const t of paidDeposits) {
+      const h = Number(hourFmt.format(new Date(t.created_at)));
+      if (!Number.isNaN(h) && buckets[h]) {
+        buckets[h].valor += Number(t.amount);
+        buckets[h].qtd += 1;
+      }
+    }
+    return buckets.map((b) => ({ ...b, valor: Number(b.valor.toFixed(2)) }));
+  }, [paidDeposits, hourFmt]);
+
+  const weekdayData = useMemo(() => {
+    const order = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const labels = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+    const buckets = labels.map((name) => ({ name, valor: 0, qtd: 0 }));
+    for (const t of paidDeposits) {
+      const idx = order.indexOf(weekdayFmt.format(new Date(t.created_at)));
+      if (idx >= 0) {
+        buckets[idx].valor += Number(t.amount);
+        buckets[idx].qtd += 1;
+      }
+    }
+    return buckets.map((b) => ({ ...b, valor: Number(b.valor.toFixed(2)) }));
+  }, [paidDeposits, weekdayFmt]);
+
+  const chartTooltip = {
+    contentStyle: {
+      background: "hsl(var(--card))",
+      border: "1px solid hsl(var(--border))",
+      borderRadius: 8,
+      fontSize: 12,
+    },
+    formatter: (value: number, key: string) =>
+      key === "valor" ? [brl(Number(value)), "Volume"] : [value, "Transações"],
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -225,6 +275,36 @@ const AdminDashboard = ({ profiles, transactions, referrals, refetch }: Props) =
           </ResponsiveContainer>
         </div>
       </div>
+
+      <div className="grid lg:grid-cols-2 gap-4">
+        <div className="p-4 rounded-2xl bg-card border border-border">
+          <h3 className="text-sm font-semibold text-foreground mb-4">Picos de PIX por Horário</h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={hourlyData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={10} interval={1} />
+              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} />
+              <Tooltip cursor={{ fill: "hsl(var(--primary) / 0.08)" }} {...chartTooltip} />
+              <Bar dataKey="valor" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="qtd" fill="hsl(var(--primary) / 0.35)" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="p-4 rounded-2xl bg-card border border-border">
+          <h3 className="text-sm font-semibold text-foreground mb-4">Picos de PIX por Dia da Semana</h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={weekdayData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={10} />
+              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} />
+              <Tooltip cursor={{ fill: "hsl(var(--primary) / 0.08)" }} {...chartTooltip} />
+              <Bar dataKey="valor" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="qtd" fill="hsl(var(--primary) / 0.35)" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
     </div>
   );
 };
