@@ -16,20 +16,25 @@ Deno.serve(async (req) => {
 
   try {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const cronSecret = Deno.env.get("RECONCILE_CRON_SECRET") ?? "";
+    const providedCronSecret = req.headers.get("x-cron-secret") ?? "";
+    // Automated (cron) invocations authenticate with the shared cron secret.
+    const isCron = !!cronSecret && providedCronSecret === cronSecret;
+
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
+    if (!isCron && !authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const token = authHeader.replace("Bearer ", "");
+    const token = (authHeader ?? "").replace("Bearer ", "");
 
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, serviceRoleKey);
 
-    // Automated (cron) invocations authenticate with the service role key.
-    const isServiceRole = token === serviceRoleKey;
+    const isServiceRole = isCron || token === serviceRoleKey;
+
 
     if (!isServiceRole) {
       const anonClient = createClient(
