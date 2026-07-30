@@ -53,7 +53,7 @@ const AdminDashboard = ({ profiles, transactions, referrals, refetch }: Props) =
 
   const deposits = filtered.tx.filter((t) => t.type === "deposit");
   const paidDeposits = deposits.filter((t) => t.status === "completed");
-  const pendingDeposits = deposits.filter((t) => t.status === "pending");
+  
   const todayDeposits = deposits.filter((t) => brDayKey(t.created_at) === today);
   const todayPaid = todayDeposits.filter((t) => t.status === "completed");
   const todayUsers = filtered.pr.filter((p) => brDayKey(p.created_at) === today);
