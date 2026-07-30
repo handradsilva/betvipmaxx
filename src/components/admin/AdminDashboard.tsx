@@ -1,99 +1,164 @@
 import { useState, useMemo } from "react";
-import { Users, DollarSign, QrCode, UserPlus, TrendingUp, UserCheck } from "lucide-react";
-import { format, parseISO, isToday, isAfter, isBefore, startOfDay, endOfDay, eachDayOfInterval, subDays } from "date-fns";
+import { Users, DollarSign, QrCode, UserPlus, TrendingUp, UserCheck, Clock, RefreshCw } from "lucide-react";
+import { format } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 import type { AdminProfile, AdminTransaction, AdminReferral } from "@/hooks/useAdminData";
 import AdminDateFilter from "./AdminDateFilter";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
+
 interface Props {
   profiles: AdminProfile[];
   transactions: AdminTransaction[];
   referrals: AdminReferral[];
+  refetch: () => void | Promise<void>;
 }
 
 const AFFILIATE_EMAILS = ["filipeafiliado@gmail.com", "italoafiliado2@gmail.com"];
+const TZ = "America/Sao_Paulo";
 
-const AdminDashboard = ({ profiles, transactions, referrals }: Props) => {
+// Date key (yyyy-MM-dd) of a timestamp as seen in Brazil (BRT), so the dashboard
+// buckets match exactly what the payment gateway reports for each calendar day.
+const dayKeyFmt = new Intl.DateTimeFormat("en-CA", {
+  timeZone: TZ,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+const brDayKey = (iso: string) => dayKeyFmt.format(new Date(iso));
+const localDayKey = (d: Date) => format(d, "yyyy-MM-dd");
+const todayKey = () => dayKeyFmt.format(new Date());
+const brl = (n: number) => `R$ ${n.toFixed(2).replace(".", ",")}`;
+
+const AdminDashboard = ({ profiles, transactions, referrals, refetch }: Props) => {
   const [startDate, setStartDate] = useState<Date>(new Date(2026, 0, 1));
   const [endDate, setEndDate] = useState<Date>(new Date());
+  const [syncing, setSyncing] = useState(false);
+
+  const startKey = localDayKey(startDate);
+  const endKey = localDayKey(endDate);
+  const today = todayKey();
+
+  const inRange = (iso: string) => {
+    const k = brDayKey(iso);
+    return k >= startKey && k <= endKey;
+  };
 
   const filtered = useMemo(() => {
-    const s = startOfDay(startDate);
-    const e = endOfDay(endDate);
-    const tx = transactions.filter((t) => {
-      const d = parseISO(t.created_at);
-      return isAfter(d, s) && isBefore(d, e);
-    });
-    const pr = profiles.filter((p) => {
-      const d = parseISO(p.created_at);
-      return isAfter(d, s) && isBefore(d, e);
-    });
+    const tx = transactions.filter((t) => inRange(t.created_at));
+    const pr = profiles.filter((p) => inRange(p.created_at));
     return { tx, pr };
-  }, [transactions, profiles, startDate, endDate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transactions, profiles, startKey, endKey]);
 
   const deposits = filtered.tx.filter((t) => t.type === "deposit");
   const paidDeposits = deposits.filter((t) => t.status === "completed");
-  const todayDeposits = deposits.filter((t) => isToday(parseISO(t.created_at)));
+  const pendingDeposits = deposits.filter((t) => t.status === "pending");
+  const todayDeposits = deposits.filter((t) => brDayKey(t.created_at) === today);
   const todayPaid = todayDeposits.filter((t) => t.status === "completed");
-  const todayUsers = filtered.pr.filter((p) => isToday(parseISO(p.created_at)));
+  const todayUsers = filtered.pr.filter((p) => brDayKey(p.created_at) === today);
 
-  const totalPixValue = paidDeposits.reduce((s, t) => s + t.amount, 0);
-  const todayPixValue = todayPaid.reduce((s, t) => s + t.amount, 0);
+  const totalPixValue = paidDeposits.reduce((s, t) => s + Number(t.amount), 0);
+  const todayPixValue = todayPaid.reduce((s, t) => s + Number(t.amount), 0);
+  const pendingValue = pendingDeposits.reduce((s, t) => s + Number(t.amount), 0);
+
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("reconcile-deposits", {
+        body: { days: 30 },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast({
+        title: "Sincronização concluída",
+        description: `${data.checked} PIX verificados · ${data.confirmed} confirmados (${brl(data.confirmed_amount)}) · ${data.expired} expirados · ${data.still_pending} ainda pendentes`,
+      });
+      await refetch();
+    } catch (e) {
+      toast({
+        title: "Erro ao sincronizar",
+        description: e instanceof Error ? e.message : "Tente novamente em instantes.",
+        variant: "destructive",
+      });
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const affiliateCards = useMemo(() => {
-    const s = startOfDay(startDate);
-    const e = endOfDay(endDate);
     return AFFILIATE_EMAILS.map((email) => {
       const profile = profiles.find((p) => p.email === email);
       if (!profile) return { email, leads: 0, leadsToday: 0, ftds: 0, volume: 0 };
       const affReferrals = referrals.filter((r) => r.referrer_user_id === profile.user_id);
-      const affReferralsFiltered = affReferrals.filter((r) => {
-        const d = parseISO(r.created_at);
-        return isAfter(d, s) && isBefore(d, e);
-      });
+      const affReferralsFiltered = affReferrals.filter((r) => inRange(r.created_at));
       const referredIds = new Set(affReferralsFiltered.map((r) => r.referred_user_id));
       const referredDeposits = filtered.tx.filter(
         (t) => referredIds.has(t.user_id) && t.type === "deposit" && t.status === "completed"
       );
       const ftdUsers = new Set(referredDeposits.map((t) => t.user_id));
-      const volume = referredDeposits.reduce((sum, t) => sum + t.amount, 0);
-      const leadsToday = affReferrals.filter((r) => isToday(parseISO(r.created_at))).length;
+      const volume = referredDeposits.reduce((sum, t) => sum + Number(t.amount), 0);
+      const leadsToday = affReferrals.filter((r) => brDayKey(r.created_at) === today).length;
       return { email, leads: affReferralsFiltered.length, leadsToday, ftds: ftdUsers.size, volume };
     });
-  }, [profiles, referrals, filtered.tx, startDate, endDate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profiles, referrals, filtered.tx, startKey, endKey]);
 
   const metrics = [
     { label: "Total de Usuários", value: profiles.length, icon: Users, color: "text-primary" },
-    { label: "Saldo PIX (Hoje)", value: `R$ ${todayPixValue.toFixed(2).replace(".", ",")}`, icon: DollarSign, color: "text-primary" },
+    { label: "Saldo PIX (Hoje)", value: brl(todayPixValue), icon: DollarSign, color: "text-primary" },
     { label: "PIX Gerados (Hoje)", value: `${todayDeposits.length} (${todayPaid.length} Pagos)`, icon: QrCode, color: "text-primary" },
     { label: "Cadastros Hoje", value: todayUsers.length, icon: UserPlus, color: "text-primary" },
-    { label: "Total Depósitos", value: `R$ ${totalPixValue.toFixed(2).replace(".", ",")}`, icon: TrendingUp, color: "text-primary" },
+    { label: "Total Depósitos", value: brl(totalPixValue), icon: TrendingUp, color: "text-primary" },
     { label: "PIX Gerados (Geral)", value: `${deposits.length} (${paidDeposits.length} Pagos)`, icon: QrCode, color: "text-primary" },
+    { label: "PIX Pendentes (Período)", value: `${pendingDeposits.length} · ${brl(pendingValue)}`, icon: Clock, color: "text-muted-foreground" },
   ];
 
   const chartData = useMemo(() => {
-    const days = eachDayOfInterval({
-      start: subDays(endDate, 30) > startDate ? subDays(endDate, 30) : startDate,
-      end: endDate,
-    });
-    return days.map((day) => {
-      const dayStr = format(day, "dd/MM");
-      const dayStart = startOfDay(day);
-      const dayEnd = endOfDay(day);
-      const dayPaid = paidDeposits.filter((t) => {
-        const d = parseISO(t.created_at);
-        return isAfter(d, dayStart) && isBefore(d, dayEnd);
-      });
-      const dayRegs = profiles.filter((p) => {
-        const d = parseISO(p.created_at);
-        return isAfter(d, dayStart) && isBefore(d, dayEnd);
-      });
-      return { name: dayStr, pix: dayPaid.reduce((s, t) => s + t.amount, 0), users: dayRegs.length };
-    });
-  }, [paidDeposits, profiles, startDate, endDate]);
+    // Build day buckets in BRT between the selected range (max 30 days shown).
+    const keys: string[] = [];
+    const cursor = new Date(startDate);
+    cursor.setHours(12, 0, 0, 0);
+    const last = new Date(endDate);
+    last.setHours(12, 0, 0, 0);
+    while (cursor <= last) {
+      keys.push(localDayKey(cursor));
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    const window = keys.slice(-31);
+
+    const paidByDay = new Map<string, number>();
+    for (const t of paidDeposits) {
+      const k = brDayKey(t.created_at);
+      paidByDay.set(k, (paidByDay.get(k) ?? 0) + Number(t.amount));
+    }
+    const usersByDay = new Map<string, number>();
+    for (const p of profiles) {
+      const k = brDayKey(p.created_at);
+      usersByDay.set(k, (usersByDay.get(k) ?? 0) + 1);
+    }
+
+    return window.map((k) => ({
+      name: `${k.slice(8, 10)}/${k.slice(5, 7)}`,
+      pix: Number((paidByDay.get(k) ?? 0).toFixed(2)),
+      users: usersByDay.get(k) ?? 0,
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paidDeposits, profiles, startKey, endKey]);
 
   return (
     <div className="space-y-6">
-      <AdminDateFilter startDate={startDate} endDate={endDate} onStartChange={setStartDate} onEndChange={setEndDate} />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <AdminDateFilter startDate={startDate} endDate={endDate} onStartChange={setStartDate} onEndChange={setEndDate} />
+        <button
+          onClick={handleSync}
+          disabled={syncing}
+          className="flex items-center gap-1.5 text-xs font-medium px-3 h-8 rounded-lg bg-primary text-primary-foreground disabled:opacity-60"
+        >
+          <RefreshCw size={13} className={syncing ? "animate-spin" : ""} />
+          {syncing ? "Sincronizando..." : "Sincronizar com gateway"}
+        </button>
+      </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
         {metrics.map((m, i) => (
@@ -127,7 +192,7 @@ const AdminDashboard = ({ profiles, transactions, referrals }: Props) => {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Volume Depósitos</p>
-                <p className="font-bold text-foreground">R$ {aff.volume.toFixed(2).replace(".", ",")}</p>
+                <p className="font-bold text-foreground">{brl(aff.volume)}</p>
               </div>
             </div>
           </div>
