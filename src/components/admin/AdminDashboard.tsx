@@ -60,7 +60,7 @@ const AdminDashboard = ({ profiles, transactions, referrals, refetch }: Props) =
 
   const totalPixValue = paidDeposits.reduce((s, t) => s + Number(t.amount), 0);
   const todayPixValue = todayPaid.reduce((s, t) => s + Number(t.amount), 0);
-  const pendingValue = pendingDeposits.reduce((s, t) => s + Number(t.amount), 0);
+  
 
   const handleSync = async () => {
     setSyncing(true);
