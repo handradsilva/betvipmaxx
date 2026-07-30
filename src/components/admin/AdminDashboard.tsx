@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Users, DollarSign, QrCode, UserPlus, TrendingUp, UserCheck, Clock, RefreshCw } from "lucide-react";
+import { Users, DollarSign, QrCode, UserPlus, TrendingUp, UserCheck, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -53,14 +53,14 @@ const AdminDashboard = ({ profiles, transactions, referrals, refetch }: Props) =
 
   const deposits = filtered.tx.filter((t) => t.type === "deposit");
   const paidDeposits = deposits.filter((t) => t.status === "completed");
-  const pendingDeposits = deposits.filter((t) => t.status === "pending");
+  
   const todayDeposits = deposits.filter((t) => brDayKey(t.created_at) === today);
   const todayPaid = todayDeposits.filter((t) => t.status === "completed");
   const todayUsers = filtered.pr.filter((p) => brDayKey(p.created_at) === today);
 
   const totalPixValue = paidDeposits.reduce((s, t) => s + Number(t.amount), 0);
   const todayPixValue = todayPaid.reduce((s, t) => s + Number(t.amount), 0);
-  const pendingValue = pendingDeposits.reduce((s, t) => s + Number(t.amount), 0);
+  
 
   const handleSync = async () => {
     setSyncing(true);
