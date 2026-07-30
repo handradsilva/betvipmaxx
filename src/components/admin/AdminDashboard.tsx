@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Users, DollarSign, QrCode, UserPlus, TrendingUp, UserCheck, Clock, RefreshCw } from "lucide-react";
+import { Users, DollarSign, QrCode, UserPlus, TrendingUp, UserCheck, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
