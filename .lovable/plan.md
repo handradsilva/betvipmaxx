@@ -1,17 +1,20 @@
-## Objetivo
-Expandir a busca da aba "Usuários" no painel admin para também encontrar leads pelo **nome completo** (`full_name`), além de e-mail e CPF.
+# Apagar os dois usuários de 14/08/2026
 
-## Alterações
+## Usuários a remover
 
-**`src/components/admin/AdminUsers.tsx`**
-- Atualizar o placeholder do input para: `"Buscar por nome, e-mail ou CPF..."`
-- No filtro `useMemo`, adicionar match por nome:
-  - `nameMatch = (p.full_name || "").toLowerCase().includes(q)`
-  - Retornar `emailMatch || cpfMatch || nameMatch`
-- Manter a normalização de CPF (com/sem pontos e hífen) já existente.
-- Busca case-insensitive e por substring (ex: digitar "joão" encontra "João da Silva").
+| E-mail | Nome | Cadastro (BRT) | Transações |
+|---|---|---|---|
+| filipppppe.andrade.10000@gmail.com | FILLIPE ANDRADE DA SILVA | 14/08/2026 06:56 | 1 |
+| testez@gmial.com | — | 14/08/2026 06:30 | 0 |
 
-## Observações
-- `full_name` já existe em `AdminProfile` e é populado para cadastros a partir de 14/05/2026.
-- Leads antigos sem nome simplesmente não casam pelo nome, mas continuam encontráveis por e-mail/CPF.
-- Nenhuma alteração de backend, schema ou lógica de negócio.
+## O que será feito
+
+Exclusão definitiva de ambos: perfil, transações vinculadas, indicações e a conta de login. A ação é irreversível — se um deles for um lead real com depósito, ele desaparece do dashboard e dos relatórios.
+
+Observação: o primeiro usuário tem 1 transação registrada. Ela será apagada junto.
+
+## Detalhes técnicos
+
+- Remover linhas em `referrals` (como indicador ou indicado), `transactions`, `user_roles` e `profiles` para os dois `user_id`.
+- Remover as contas em `auth.users` (as FKs de `profiles`/`transactions` são `on delete cascade`, então a exclusão da conta de login já limpa o restante).
+- Executado via ferramenta de dados, sem alteração de código do app.
