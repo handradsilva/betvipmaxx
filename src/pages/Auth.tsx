@@ -27,6 +27,11 @@ const Auth = () => {
 
     try {
       if (isRegister) {
+        if (password.length < 6) {
+          toast({ title: "Senha muito curta", description: "A senha deve ter no mínimo 6 caracteres.", variant: "destructive" });
+          setLoading(false);
+          return;
+        }
         if (!isValidCpf(cpf)) {
           toast({ title: "CPF inválido", description: "Digite um CPF válido para continuar.", variant: "destructive" });
           setLoading(false);
@@ -119,6 +124,9 @@ const Auth = () => {
                 required
                 minLength={6}
               />
+              {password.length > 0 && password.length < 6 && (
+                <p className="text-xs text-destructive mt-1">A senha deve ter no mínimo 6 caracteres</p>
+              )}
             </div>
 
             {isRegister && (
