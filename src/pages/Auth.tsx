@@ -124,6 +124,9 @@ const Auth = () => {
                 required
                 minLength={6}
               />
+              {password.length > 0 && password.length < 6 && (
+                <p className="text-xs text-destructive mt-1">A senha deve ter no mínimo 6 caracteres</p>
+              )}
             </div>
 
             {isRegister && (
